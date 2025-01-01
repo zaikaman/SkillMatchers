@@ -5,7 +5,6 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const next = requestUrl.searchParams.get('next') ?? '/dashboard'
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies })
@@ -17,8 +16,20 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (user?.email_confirmed_at) {
-        // If email is confirmed, redirect to dashboard
-        return NextResponse.redirect(new URL(next, request.url))
+        // Check if user has completed onboarding
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, has_completed_onboarding')
+          .eq('id', user.id)
+          .single()
+
+        if (!profile?.has_completed_onboarding) {
+          // If onboarding is not completed, redirect to onboarding page
+          return NextResponse.redirect(new URL('/onboarding', request.url))
+        }
+        
+        // If onboarding is completed, redirect to dashboard
+        return NextResponse.redirect(new URL('/dashboard', request.url))
       } else {
         // If email is not confirmed, redirect to verify page
         return NextResponse.redirect(new URL('/auth/verify', request.url))
