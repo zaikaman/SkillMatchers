@@ -1,7 +1,75 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { signUp, signInWithGoogle, signInWithLinkedIn } from '@/lib/actions'
+
+function validatePassword(password: string) {
+  const minLength = password.length >= 6;
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  if (!minLength) {
+    return 'Password must be at least 6 characters long';
+  }
+  if (!hasLowerCase || !hasUpperCase || !hasNumber || !hasSymbol) {
+    return 'Password must include lowercase, uppercase letters, numbers and symbols';
+  }
+  return null;
+}
 
 export default function SignUp() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+    const fullName = formData.get('fullName') as string
+
+    // Validate password before submitting
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      await signUp(email, password, fullName)
+      router.push('/auth/verify')
+    } catch (error: any) {
+      setError('An error occurred during signup. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle()
+    } catch (error: any) {
+      setError(error.message)
+    }
+  }
+
+  const handleLinkedInSignIn = async () => {
+    try {
+      await signInWithLinkedIn()
+    } catch (error: any) {
+      setError(error.message)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-white">
       <div className="container mx-auto px-4 py-8">
@@ -12,36 +80,58 @@ export default function SignUp() {
               <h1 className="heading-lg gradient-text mb-2">Create Account</h1>
               <p className="body-base text-gray-600 mb-8">Join our community of learners and mentors</p>
 
-              <form className="space-y-6">
+              {error && (
+                <div className="mb-4 p-4 text-sm text-red-600 bg-red-50 rounded-lg">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                   <input
+                    id="fullName"
+                    name="fullName"
                     type="text"
+                    required
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[--primary-color] focus:border-transparent transition-all"
                     placeholder="John Doe"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
+                    id="email"
+                    name="email"
                     type="email"
+                    required
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[--primary-color] focus:border-transparent transition-all"
                     placeholder="john@example.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                   <input
+                    id="password"
+                    name="password"
                     type="password"
+                    required
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[--primary-color] focus:border-transparent transition-all"
                     placeholder="••••••••"
                   />
+                  <p className="mt-2 text-sm text-gray-500">
+                    Password must be at least 6 characters and include lowercase, uppercase letters, numbers and symbols.
+                  </p>
                 </div>
 
-                <button type="submit" className="btn-primary w-full">
-                  Sign Up
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary w-full disabled:opacity-50"
+                >
+                  {loading ? 'Creating Account...' : 'Sign Up'}
                 </button>
               </form>
 
@@ -56,11 +146,17 @@ export default function SignUp() {
                 </div>
 
                 <div className="mt-6 grid grid-cols-2 gap-4">
-                  <button className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                  <button
+                    onClick={handleGoogleSignIn}
+                    className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
                     <Image src="/google.svg" alt="Google" width={20} height={20} />
                     <span className="ml-2">Google</span>
                   </button>
-                  <button className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                  <button
+                    onClick={handleLinkedInSignIn}
+                    className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
+                  >
                     <Image src="/linkedin.svg" alt="LinkedIn" width={20} height={20} />
                     <span className="ml-2">LinkedIn</span>
                   </button>
