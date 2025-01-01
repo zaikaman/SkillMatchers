@@ -46,16 +46,21 @@ export async function signOut() {
   if (error) throw error
 }
 
-export async function signInWithGoogle() {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${siteUrl}/auth/callback`,
-    },
-  })
-  
-  if (error) throw error
-  return data
+export const signInWithGoogle = async () => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+      }
+    })
+    
+    if (error) throw error
+    return { data, error: null }
+  } catch (error) {
+    console.error('Error signing in with Google:', error)
+    return { data: null, error }
+  }
 }
 
 export async function signInWithLinkedIn() {
