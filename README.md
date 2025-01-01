@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SkillMatchers
 
-## Getting Started
+SkillMatch is a modern web platform that connects employers with skilled workers, inspired by the social matching concept of Litmatch but specifically designed for the professional employment market.
 
-First, run the development server:
+## 🌟 Overview
 
+SkillMatch revolutionizes the way employers and workers connect in the digital age. Our platform provides an intuitive, efficient, and engaging way to match the right talent with the right opportunities.
+
+## ✨ Key Features
+
+- **Smart Matching Algorithm**: Connects employers with workers based on skills, experience, and preferences
+- **Real-time Chat**: Instant communication between employers and potential candidates
+- **Profile Customization**: Detailed profiles for both employers and workers
+- **Skill Verification**: Built-in system to verify worker skills and credentials
+- **Job Posting**: Easy-to-use interface for employers to post job opportunities
+- **Search & Filter**: Advanced search functionality with multiple filtering options
+- **Mobile Responsive**: Fully optimized for all devices
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 16.x or higher
+- npm or yarn
+- Supabase account for backend services
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/skillmatch.git
+```
+
+2. Install dependencies
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Set up environment variables
+```bash
+cp .env.example .env.local
+```
+Fill in your environment variables in `.env.local`
+
+4. Run the development server
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠 Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend**: Next.js, TypeScript, TailwindCSS
+- **Backend**: Supabase
+- **Authentication**: NextAuth.js
+- **Database**: PostgreSQL (via Supabase)
+- **Deployment**: Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📱 Features in Detail
 
-## Learn More
+### For Employers
+- Post job opportunities
+- Browse worker profiles
+- Direct messaging with candidates
+- Company profile management
+- Job application tracking
 
-To learn more about Next.js, take a look at the following resources:
+### For Workers
+- Create professional profiles
+- Showcase skills and experience
+- Apply to jobs
+- Real-time chat with employers
+- Portfolio showcase
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔒 Security
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Secure authentication system
+- Data encryption
+- GDPR compliant
+- Regular security audits
 
-## Deploy on Vercel
+## 🤝 Contributing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+We welcome contributions! Please see our contributing guidelines for more details.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📞 Support
+
+For support, email support@skillmatch.com or join our Discord community.
+
+## 🌐 Links
+
+- [Website](https://skillmatchers.vercel.app)

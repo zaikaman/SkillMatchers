@@ -1,0 +1,249 @@
+# SkillMatch Development Plan
+
+## 1. AI Matching System
+- Gemini AI Integration for analyzing:
+  * CV and worker profiles (using Gemini Pro Vision for parsing visual CVs)
+  * Job descriptions analysis
+  * Skills and requirements matching
+  * Cost-effective solution with competitive pricing
+- Scoring and Ranking Features:
+  * Skill matching compatibility using Gemini's natural language understanding
+  * Work experience relevance analysis
+  * Salary expectations alignment
+  * Geographic location optimization
+  * Working hours preferences matching
+
+## 2. Profile System
+### Worker Profile:
+- AI-powered CV parser
+- Portfolio showcase
+- Skill assessment tests
+- Badges and certifications
+- Availability status
+- Salary expectations
+
+### Employer Profile:
+- Company information
+- Job postings
+- Company culture
+- Benefits & perks
+- Past hiring history
+- Company reviews
+
+## 3. Matching System
+### Smart Filters:
+- Location-based matching
+- Skill-based matching
+- Experience level matching
+- Salary range matching
+- Work type (remote/hybrid/onsite)
+
+### AI-Powered Recommendations:
+- Daily matches suggestions
+- "You might like" recommendations
+- Similar profile suggestions
+- Job recommendations based on skills
+
+## 4. Chat & Communication
+- Real-time messaging (Socket.io)
+- AI-powered ice breakers
+- Automated response suggestions
+- File sharing capability
+- Video call integration
+- Interview scheduling
+
+## 5. Assessment System
+### Skill Verification:
+- Online coding tests
+- Technical assessments
+- Language proficiency tests
+- Soft skills evaluation
+- AI-powered interview practice
+
+## 6. Database Schema (Supabase)
+```sql
+-- Users
+users
+  - id
+  - email
+  - user_type (employer/worker)
+  - created_at
+  - last_active
+
+-- Profiles
+profiles
+  - user_id
+  - full_name
+  - avatar_url
+  - bio
+  - location
+  - skills (JSONB)
+  - experience (JSONB)
+  - preferences (JSONB)
+
+-- Companies
+companies
+  - id
+  - name
+  - description
+  - industry
+  - size
+  - location
+
+-- Jobs
+jobs
+  - id
+  - company_id
+  - title
+  - description
+  - requirements (JSONB)
+  - salary_range
+  - location
+  - work_type
+
+-- Matches
+matches
+  - id
+  - worker_id
+  - job_id
+  - status
+  - match_score
+  - created_at
+
+-- Messages
+messages
+  - id
+  - match_id
+  - sender_id
+  - content
+  - type
+  - created_at
+
+-- Assessments
+assessments
+  - id
+  - worker_id
+  - skill_id
+  - score
+  - completed_at
+```
+
+## 7. API Endpoints
+```typescript
+// Authentication
+POST /api/auth/signup
+POST /api/auth/login
+POST /api/auth/logout
+
+// Profiles
+GET /api/profiles/:id
+PUT /api/profiles/:id
+POST /api/profiles/upload-cv
+
+// Matching
+GET /api/matches
+POST /api/matches/swipe
+GET /api/matches/recommendations
+
+// Jobs
+GET /api/jobs
+POST /api/jobs
+GET /api/jobs/:id/applications
+
+// Messages
+GET /api/messages/:matchId
+POST /api/messages/:matchId
+GET /api/messages/unread
+
+// Assessments
+GET /api/assessments
+POST /api/assessments/start
+PUT /api/assessments/:id/submit
+```
+
+## 8. AI Integration Plan
+### Gemini AI:
+- CV parsing and analysis using Gemini Pro Vision
+  * Extract text from CV images and PDFs
+  * Structured data extraction
+  * Multi-format support
+- Job description analysis
+  * Key requirements extraction
+  * Skill categorization
+  * Experience level detection
+- Matching score calculation
+  * Semantic similarity scoring
+  * Requirements alignment checking
+  * Cultural fit analysis
+- Chat suggestions and assistance
+  * Context-aware responses
+  * Professional communication tips
+  * Multi-language support
+- Interview questions generation
+  * Role-specific questions
+  * Skill assessment prompts
+  * Behavioral question suggestions
+
+### Custom ML Model (with Gemini API):
+- Skill similarity matching
+  * Industry-specific terminology understanding
+  * Technical skill correlation
+  * Soft skills evaluation
+- User behavior analysis
+  * Interaction patterns
+  * Preference learning
+  * Match quality feedback
+- Success prediction
+  * Historical data analysis
+  * Match outcome prediction
+  * Compatibility scoring
+- Fraud detection
+  * Profile authenticity checking
+  * Suspicious activity detection
+  * Content moderation
+
+## 9. Security Features
+- JWT authentication
+- Rate limiting
+- Input validation
+- Profile verification
+- Report system
+- Data encryption
+
+## 10. Analytics & Reporting
+- Match success rate
+- User engagement metrics
+- Popular skills/positions
+- Geographic trends
+- Salary insights
+
+## Implementation Timeline
+
+### Phase 1 (2-3 weeks):
+- Basic authentication
+- Profile creation
+- Basic matching system
+
+### Phase 2 (2-3 weeks):
+- AI matching integration
+- Chat system
+- Job posting system
+
+### Phase 3 (2-3 weeks):
+- Assessment system
+- Advanced filters
+- Analytics dashboard
+
+### Phase 4 (2-3 weeks):
+- Video calls
+- Mobile optimization
+- Performance improvements
+
+## Tech Stack
+- Frontend: Next.js, TypeScript, TailwindCSS
+- Backend: Supabase
+- Database: PostgreSQL
+- AI: Google Gemini AI
+- Real-time: Socket.io
+- Storage: Supabase Storage
+- Authentication: NextAuth.js 
