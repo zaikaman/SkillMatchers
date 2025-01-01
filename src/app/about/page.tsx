@@ -10,7 +10,7 @@ export default function About() {
           <div className="text-center mb-16">
             <h1 className="heading-xl gradient-text mb-6">Our Mission</h1>
             <p className="body-lg text-gray-600 max-w-3xl mx-auto">
-              Empowering individuals to grow through meaningful connections. We're building the future of skill-based networking and mentorship.
+              Empowering individuals to grow through meaningful connections. We&apos;re building the future of skill-based networking and mentorship.
             </p>
           </div>
 
@@ -39,7 +39,7 @@ export default function About() {
             <div>
               <h2 className="heading-lg gradient-text mb-6">Our Story</h2>
               <div className="space-y-4 text-gray-600">
-                <p>Founded in 2021 in San Francisco, SkillMatch emerged from a simple observation: the traditional ways of finding mentors and learning new skills weren't working in our rapidly evolving digital world.</p>
+                <p>Founded in 2021 in San Francisco, SkillMatchers emerged from a simple observation: the traditional ways of finding mentors and learning new skills weren&apos;t working in our rapidly evolving digital world.</p>
                 <p>Our founders, experienced tech entrepreneurs and educators, recognized that while social networks connected people based on existing relationships, there was no platform specifically designed to connect people based on complementary skills and learning goals.</p>
                 <p>What started as a small community of tech professionals has now grown into a global platform, connecting learners and mentors across various industries - from technology and design to business and creative arts.</p>
               </div>
@@ -175,6 +175,9 @@ export default function About() {
             </div>
           </div>
         </div>
+      </div>
+      <div className="text-sm text-center text-gray-200">
+        © 2024 SkillMatchers. All rights reserved.
       </div>
     </main>
   )

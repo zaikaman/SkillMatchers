@@ -86,7 +86,7 @@ export default function Home() {
                 </div>
               </div>
               <h4 className="heading-md mb-2">Emily Johnson</h4>
-              <p className="body-base text-gray-600 italic">"Found my perfect mentor match! They helped me transition into UX design seamlessly."</p>
+              <p className="body-base text-gray-600 italic">&quot;Found my perfect mentor match! They helped me transition into UX design seamlessly.&quot;</p>
             </div>
             <div className="testimonial-card">
               <div className="relative w-24 h-24 mx-auto mb-6">
@@ -101,7 +101,7 @@ export default function Home() {
                 </div>
               </div>
               <h4 className="heading-md mb-2">Mark Spencer</h4>
-              <p className="body-base text-gray-600 italic">"Met an amazing co-founder through SkillMatch. Our skills perfectly complement each other!"</p>
+              <p className="body-base text-gray-600 italic">&quot;Met an amazing co-founder through SkillMatchers. Our skills perfectly complement each other!&quot;</p>
             </div>
             <div className="testimonial-card">
               <div className="relative w-24 h-24 mx-auto mb-6">
@@ -116,7 +116,7 @@ export default function Home() {
                 </div>
               </div>
               <h4 className="heading-md mb-2">Sarah Lee</h4>
-              <p className="body-base text-gray-600 italic">"The matching algorithm is incredible! Found the perfect study group for coding."</p>
+              <p className="body-base text-gray-600 italic">&quot;The matching algorithm is incredible! Found the perfect study group for coding.&quot;</p>
             </div>
           </div>
         </div>

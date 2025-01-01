@@ -10,7 +10,7 @@ export default function Contact() {
           <div className="text-center mb-16">
             <h1 className="heading-xl gradient-text mb-6">Contact Us</h1>
             <p className="body-lg text-gray-600 max-w-3xl mx-auto">
-              Have questions or feedback? We'd love to hear from you. Our team is always here to help.
+              Have questions or feedback? We&apos;d love to hear from you. Our team is always here to help.
             </p>
           </div>
 
