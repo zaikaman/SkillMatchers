@@ -1,6 +1,3 @@
-import Image from 'next/image'
-import Link from 'next/link'
-
 export default function Contact() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-white">

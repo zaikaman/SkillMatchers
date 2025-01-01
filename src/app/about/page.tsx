@@ -167,7 +167,7 @@ export default function About() {
           <div className="bg-white p-12 rounded-2xl shadow-xl text-center">
             <h2 className="heading-lg gradient-text mb-4">Join Our Journey</h2>
             <p className="body-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              We're always looking for passionate individuals to join our team. Check out our open positions or become a member of our growing community.
+              We&apos;re always looking for passionate individuals to join our team. Check out our open positions or become a member of our growing community.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/careers" className="btn-primary">View Open Positions</Link>
