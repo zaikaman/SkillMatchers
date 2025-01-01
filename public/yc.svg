@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="160" height="40" viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="160" height="40" rx="4" fill="#F8F8F8"/>
+  <path d="M20 12V28M28 12V28" stroke="#0066CC" stroke-width="2"/>
+  <circle cx="24" cy="20" r="4" fill="#0066CC"/>
+  <text x="45" y="28" font-family="Arial" font-weight="bold" font-size="16" fill="#333333">GREYLOCK</text>
+  <text x="45" y="14" font-family="Arial" font-size="8" fill="#666666">PARTNERS</text>
+</svg> 

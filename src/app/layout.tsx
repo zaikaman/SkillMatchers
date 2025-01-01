@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Outfit, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const outfit = Outfit({ 
   subsets: ["latin"],
@@ -13,8 +15,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "SkillMatch - Connect and grow your skills",
-  description: "Find mentors, collaborate, and achieve your goals together.",
+  title: "SkillMatch - Find Your Perfect Skill Match",
+  description: "Connect with mentors and collaborators who complement your journey",
 };
 
 export default function RootLayout({
@@ -23,8 +25,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${outfit.variable} ${spaceGrotesk.variable}`}>
-      <body className={outfit.className}>{children}</body>
+    <html lang="en" className={`${spaceGrotesk.variable} ${outfit.variable}`}>
+      <body>
+        <Header />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }
