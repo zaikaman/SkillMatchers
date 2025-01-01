@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         // If email is not confirmed, redirect to verify page
         return NextResponse.redirect(new URL('/auth/verify', request.url))
       }
-    } catch (error) {
+    } catch {
       // If there's an error, redirect to login page
       return NextResponse.redirect(new URL('/login', request.url))
     }

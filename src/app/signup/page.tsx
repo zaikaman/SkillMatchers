@@ -47,8 +47,8 @@ export default function SignUp() {
     try {
       await signUp(email, password, fullName)
       router.push('/auth/verify')
-    } catch (error: any) {
-      setError('An error occurred during signup. Please try again.')
+    } catch (error: Error) {
+      setError(error.message || 'An error occurred during signup. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -57,7 +57,7 @@ export default function SignUp() {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle()
-    } catch (error: any) {
+    } catch (error: Error) {
       setError(error.message)
     }
   }
@@ -65,7 +65,7 @@ export default function SignUp() {
   const handleLinkedInSignIn = async () => {
     try {
       await signInWithLinkedIn()
-    } catch (error: any) {
+    } catch (error: Error) {
       setError(error.message)
     }
   }

@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
 export default function VerifyEmail() {
@@ -11,7 +10,7 @@ export default function VerifyEmail() {
           </div>
           <h1 className="heading-lg gradient-text mb-2">Verify Your Email</h1>
           <p className="body-base text-gray-600 mb-8">
-            We've sent a verification email to your address. Please check your inbox (and spam folder) to verify your account.
+            We&apos;ve sent a verification email to your address. Please check your inbox (and spam folder) to verify your account.
           </p>
           
           <div className="space-y-4">
