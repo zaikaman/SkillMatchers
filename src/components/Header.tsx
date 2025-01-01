@@ -10,7 +10,7 @@ export default function Header() {
     <header className="py-4 bg-white shadow-sm sticky top-0 z-50">
       <div className="container flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <div className="text-2xl font-black gradient-text">💘 SkillMatch</div>
+          <div className="text-2xl font-black gradient-text">💘 SkillMatchers</div>
         </Link>
         <nav className="hidden md:flex items-center space-x-8">
           <Link 

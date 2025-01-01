@@ -10,7 +10,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="text-2xl font-black">💘 SkillMatch</div>
+              <div className="text-2xl font-black">💘 SkillMatchers</div>
             </Link>
             <p className="text-sm text-gray-200">
               Connecting passionate individuals through skills and mentorship. Join our community and grow together.
@@ -111,7 +111,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-white/20">
           <div className="text-sm text-center text-gray-200">
-            © 2024 SkillMatch. All rights reserved.
+            © 2024 SkillMatchers. All rights reserved.
           </div>
         </div>
       </div>

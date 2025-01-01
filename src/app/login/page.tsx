@@ -5,10 +5,6 @@ export default function Login() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-white">
       <div className="container mx-auto px-4 py-8">
-        <Link href="/" className="inline-flex items-center space-x-2">
-          <div className="text-2xl font-black gradient-text">💘 SkillMatch</div>
-        </Link>
-
         <div className="mt-8 flex flex-col lg:flex-row items-stretch max-w-7xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Left side - Form */}
           <div className="w-full lg:w-[45%] p-8">
@@ -92,7 +88,7 @@ export default function Login() {
           <div className="w-full lg:w-[55%] bg-gray-50 p-8">
             <div className="max-w-2xl mx-auto">
               <div className="text-center lg:text-left mb-8">
-                <h2 className="heading-md gradient-text mb-4">Welcome Back to SkillMatch</h2>
+                <h2 className="heading-md gradient-text mb-4">Welcome Back to SkillMatchers</h2>
                 <p className="body-base text-gray-600">Continue your journey of growth and connection</p>
               </div>
 

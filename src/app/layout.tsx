@@ -15,7 +15,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "SkillMatch - Find Your Perfect Skill Match",
+  title: "SkillMatchers - Find Your Perfect Skill Match",
   description: "Connect with mentors and collaborators who complement your journey",
 };
 
