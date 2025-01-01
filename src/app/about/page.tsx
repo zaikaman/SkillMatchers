@@ -66,7 +66,7 @@ export default function About() {
                   <span className="text-2xl">🤝</span>
                 </div>
                 <h3 className="heading-md mb-4">Community First</h3>
-                <p className="text-gray-600">We believe in the power of community. Every feature and decision is made with our users' best interests in mind.</p>
+                <p className="text-gray-600">We believe in the power of community. Every feature and decision is made with our users&apos; best interests in mind.</p>
               </div>
               <div className="bg-white p-8 rounded-2xl shadow-xl">
                 <div className="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center mb-6">

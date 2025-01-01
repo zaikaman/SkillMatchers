@@ -45,7 +45,7 @@ export default function Home() {
                 <span className="text-3xl">👥</span>
               </div>
               <h3 className="heading-md mb-3">Create Your Profile</h3>
-              <p className="body-base text-gray-600">Add your skills, interests, and what you're looking to learn or teach.</p>
+              <p className="body-base text-gray-600">Add your skills, interests, and what you&apos;re looking to learn or teach.</p>
             </div>
             <div className="feature-card group">
               <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
