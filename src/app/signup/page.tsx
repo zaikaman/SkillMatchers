@@ -47,8 +47,12 @@ export default function SignUp() {
     try {
       await signUp(email, password, fullName)
       router.push('/auth/verify')
-    } catch (error: Error) {
-      setError(error.message || 'An error occurred during signup. Please try again.')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || 'An error occurred during signup. Please try again.')
+      } else {
+        setError('An error occurred during signup. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -57,16 +61,24 @@ export default function SignUp() {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle()
-    } catch (error: Error) {
-      setError(error.message)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An error occurred during Google sign in')
+      }
     }
   }
 
   const handleLinkedInSignIn = async () => {
     try {
       await signInWithLinkedIn()
-    } catch (error: Error) {
-      setError(error.message)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An error occurred during LinkedIn sign in')
+      }
     }
   }
 
