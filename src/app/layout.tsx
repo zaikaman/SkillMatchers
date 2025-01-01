@@ -3,6 +3,7 @@ import { Outfit, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Toaster } from 'react-hot-toast';
 
 const outfit = Outfit({ 
   subsets: ["latin"],
@@ -27,6 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${outfit.variable}`}>
       <body>
+        <Toaster position="top-center" />
         <Header />
         {children}
         <Footer />

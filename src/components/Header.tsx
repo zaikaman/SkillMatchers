@@ -3,10 +3,19 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/lib/supabase'
+import toast from 'react-hot-toast'
 
 export default function Header() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { user } = useAuth()
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    toast.success('You have been signed out successfully')
+  }
 
   return (
     <header className="py-4 bg-white shadow-sm sticky top-0 z-50">
@@ -43,8 +52,17 @@ export default function Header() {
 
         {/* Desktop Auth Buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <Link href="/signup" className="btn-primary">Sign Up</Link>
-          <Link href="/login" className="btn-secondary">Login</Link>
+          {user ? (
+            <>
+              <Link href="/account" className="btn-secondary">Account</Link>
+              <button onClick={handleSignOut} className="btn-primary">Sign Out</button>
+            </>
+          ) : (
+            <>
+              <Link href="/signup" className="btn-primary">Sign Up</Link>
+              <Link href="/login" className="btn-secondary">Login</Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -75,20 +93,43 @@ export default function Header() {
               Contact
             </Link>
             <div className="border-t border-gray-100 my-2"></div>
-            <Link 
-              href="/login"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Log In
-            </Link>
-            <Link 
-              href="/signup"
-              className="block px-4 py-2 text-sm text-[--primary-color] hover:bg-gray-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Sign Up
-            </Link>
+            {user ? (
+              <>
+                <Link 
+                  href="/account"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Account
+                </Link>
+                <button
+                  onClick={() => {
+                    handleSignOut()
+                    setIsMenuOpen(false)
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-[--primary-color] hover:bg-gray-100"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link 
+                  href="/login"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Log In
+                </Link>
+                <Link 
+                  href="/signup"
+                  className="block px-4 py-2 text-sm text-[--primary-color] hover:bg-gray-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>

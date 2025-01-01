@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn, signInWithGoogle, signInWithLinkedIn, getProfile } from '@/lib/actions'
+import toast from 'react-hot-toast'
 
 export default function Login() {
   const router = useRouter()
@@ -25,6 +26,8 @@ export default function Login() {
       
       // Get user profile after successful login
       const profile = await getProfile()
+      
+      toast.success('Welcome back! You have successfully signed in')
       
       // Redirect based on profile status
       if (!profile?.has_completed_onboarding) {
@@ -49,6 +52,8 @@ export default function Login() {
       // Get user profile after successful login
       const profile = await getProfile()
       
+      toast.success('Welcome back! You have successfully signed in with Google')
+      
       // Redirect based on profile status
       if (!profile?.has_completed_onboarding) {
         router.push('/onboarding')
@@ -69,6 +74,8 @@ export default function Login() {
       await signInWithLinkedIn()
       // Get user profile after successful login
       const profile = await getProfile()
+      
+      toast.success('Welcome back! You have successfully signed in with LinkedIn')
       
       // Redirect based on profile status
       if (!profile?.has_completed_onboarding) {
