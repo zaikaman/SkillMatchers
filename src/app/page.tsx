@@ -13,7 +13,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center space-x-8">
             <Link href="#how-it-works" className="text-gray-600 hover:text-[--primary-color] transition-colors">How It Works</Link>
             <Link href="#about-us" className="text-gray-600 hover:text-[--primary-color] transition-colors">About Us</Link>
-            <Link href="#contact" className="text-gray-600 hover:text-[--primary-color] transition-colors">Contact</Link>
+            <Link href="/contact" className="text-gray-600 hover:text-[--primary-color] transition-colors">Contact</Link>
           </nav>
           <div className="flex items-center space-x-4">
             <Link href="/signup" className="btn-primary">Sign Up</Link>
