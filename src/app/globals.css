@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #FF4B6E;
+  --secondary-color: #7B3FE4;
+  --gradient-start: #FF4B6E;
+  --gradient-end: #7B3FE4;
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-space-grotesk);
+  }
+
+  body {
+    font-family: var(--font-outfit);
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 antialiased;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-[--gradient-start] to-[--gradient-end]
+    font-black tracking-tight;
+}
+
+.gradient-bg {
+  @apply bg-gradient-to-r from-[--gradient-start] to-[--gradient-end];
+}
+
+.heading-xl {
+  @apply font-black text-6xl md:text-7xl tracking-tight leading-tight;
+}
+
+.heading-lg {
+  @apply font-bold text-4xl md:text-5xl tracking-tight;
+}
+
+.heading-md {
+  @apply font-bold text-2xl md:text-3xl;
+}
+
+.body-lg {
+  @apply text-lg md:text-xl leading-relaxed;
+}
+
+.body-base {
+  @apply text-base md:text-lg leading-relaxed;
+}
+
+.btn-primary {
+  @apply px-6 py-3 rounded-full text-white font-semibold 
+    bg-gradient-to-r from-[--gradient-start] to-[--gradient-end]
+    hover:opacity-90 transition-all duration-300
+    transform hover:scale-105 hover:shadow-lg
+    tracking-wide uppercase text-sm;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 rounded-full font-semibold
+    border-2 border-[--secondary-color] text-[--secondary-color]
+    hover:bg-[--secondary-color] hover:text-white
+    transition-all duration-300
+    transform hover:scale-105
+    tracking-wide uppercase text-sm;
+}
+
+.feature-card {
+  @apply p-8 bg-white rounded-xl shadow-md
+    hover:shadow-xl transition-all duration-300
+    transform hover:scale-105 hover:rotate-1;
+}
+
+.testimonial-card {
+  @apply p-8 bg-white rounded-xl shadow-md
+    hover:shadow-xl transition-all duration-300
+    transform hover:-rotate-1;
+}
+
+.floating-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.slide-in {
+  animation: slideIn 0.5s ease-out forwards;
+}
