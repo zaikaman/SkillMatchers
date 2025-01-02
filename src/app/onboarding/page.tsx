@@ -4,12 +4,12 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { updateProfile, uploadAvatar } from '@/lib/actions'
-import { uploadToCloudinary } from '@/lib/cloudinary'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { getProfile } from '@/lib/actions'
 import toast from 'react-hot-toast'
 import Loading from '@/components/Loading'
 import Link from 'next/link'
+import { uploadCV } from '@/lib/storage'
 
 type Role = 'worker' | 'employer' | null
 type Step = 1 | 2 | 3
@@ -23,7 +23,9 @@ export default function Onboarding() {
   const [languages, setLanguages] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [avatarUrl, setAvatarUrl] = useState<string>()
+  const [cvUrl, setCvUrl] = useState<string>()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cvInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     async function checkAuth() {
@@ -91,10 +93,36 @@ export default function Onboarding() {
 
     try {
       setLoading(true)
-      const url = await uploadToCloudinary(file)
+      const url = await uploadAvatar(file)
       setAvatarUrl(url)
+      toast.success('Avatar uploaded successfully')
     } catch (error) {
-      console.error('Error uploading image:', error)
+      console.error('Error uploading avatar:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar'
+      toast.error(errorMessage)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.includes('pdf')) {
+      toast.error('Please upload a PDF file')
+      return
+    }
+
+    try {
+      setLoading(true)
+      const { url } = await uploadCV(file)
+      setCvUrl(url)
+      toast.success('CV uploaded successfully')
+    } catch (error) {
+      console.error('Error uploading CV:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload CV'
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -115,6 +143,8 @@ export default function Onboarding() {
         experience: formData.get('experience') as string,
         availability: formData.get('availability') as string,
         avatar_url: avatarUrl,
+        cv_url: cvUrl,
+        linkedin_url: formData.get('linkedin_url') as string,
         has_completed_onboarding: true,
       })
       
@@ -390,6 +420,59 @@ export default function Onboarding() {
                       ))}
                     </div>
                   </div>
+
+                  {role === 'worker' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Upload Your CV
+                        </label>
+                        <div className="flex items-center space-x-6">
+                          <div className="flex-1">
+                            {cvUrl ? (
+                              <div className="flex items-center space-x-2">
+                                <span className="text-2xl">📄</span>
+                                <span className="text-sm text-gray-600">CV uploaded successfully</span>
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-600">No CV uploaded yet</div>
+                            )}
+                          </div>
+                          <input
+                            ref={cvInputRef}
+                            type="file"
+                            accept="application/pdf"
+                            onChange={handleCVUpload}
+                            className="hidden"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => cvInputRef.current?.click()}
+                            className="btn-secondary"
+                            disabled={loading}
+                          >
+                            {loading ? 'Uploading...' : 'Upload CV'}
+                          </button>
+                        </div>
+                        <p className="mt-1 text-sm text-gray-500">
+                          Only PDF files are accepted
+                        </p>
+                      </div>
+
+                      <div>
+                        <label htmlFor="linkedin_url" className="block text-sm font-medium text-gray-700 mb-1">
+                          LinkedIn Profile URL
+                        </label>
+                        <input
+                          id="linkedin_url"
+                          name="linkedin_url"
+                          type="url"
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[--primary-color] focus:border-transparent transition-all"
+                          placeholder="https://linkedin.com/in/your-profile"
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <button
                     type="submit"

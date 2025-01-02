@@ -4,7 +4,11 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['images.unsplash.com', 'res.cloudinary.com'],
+    domains: [
+      'images.unsplash.com',
+      'res.cloudinary.com',
+      'pjkcmfosyckukzofylrk.supabase.co'
+    ],
   },
 }
 

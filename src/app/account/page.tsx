@@ -1,14 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { getProfile, updateProfile, uploadAvatar } from '@/lib/actions'
+import { getProfile, updateProfile } from '@/lib/actions'
 import { supabase } from '@/lib/supabase'
 import { Profile } from '@/lib/actions'
 import { PencilIcon, CheckIcon, XMarkIcon, CameraIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import { uploadCV, uploadAvatar } from '@/lib/storage'
 
 export default function AccountPage() {
   const router = useRouter()
@@ -18,6 +19,8 @@ export default function AccountPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editedProfile, setEditedProfile] = useState<Partial<Profile>>({})
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [uploadingCV, setUploadingCV] = useState(false)
+  const cvInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     async function loadProfile() {
@@ -67,14 +70,50 @@ export default function AccountPage() {
 
     try {
       setUploadingAvatar(true)
-      const avatarUrl = await uploadAvatar(file)
-      setProfile({ ...profile, avatar_url: avatarUrl } as Profile)
+      const url = await uploadAvatar(file)
+      
+      // Cập nhật URL avatar mới vào database
+      await updateProfile({
+        ...profile,
+        avatar_url: url
+      })
+      
+      // Sau khi cập nhật database thành công, cập nhật state local
+      setProfile({ ...profile, avatar_url: url } as Profile)
       toast.success('Avatar updated successfully')
     } catch (error) {
       console.error('Error uploading avatar:', error)
-      toast.error('Failed to upload avatar')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar'
+      toast.error(errorMessage)
     } finally {
       setUploadingAvatar(false)
+    }
+  }
+
+  const handleCVChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.includes('pdf')) {
+      toast.error('Please upload a PDF file')
+      return
+    }
+
+    try {
+      setUploadingCV(true)
+      const { url, downloadUrl } = await uploadCV(file)
+      setEditedProfile({ 
+        ...editedProfile, 
+        cv_url: url,
+        cv_download_url: downloadUrl 
+      })
+      toast.success('CV uploaded successfully')
+    } catch (error) {
+      console.error('Error uploading CV:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload CV'
+      toast.error(errorMessage)
+    } finally {
+      setUploadingCV(false)
     }
   }
 
@@ -300,6 +339,129 @@ export default function AccountPage() {
                   )}
                 </div>
               </div>
+
+              {profile?.role === 'worker' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-2">CV & LinkedIn</h2>
+                    
+                    {/* CV Upload */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Your CV
+                      </label>
+                      {isEditing ? (
+                        <div className="flex items-center space-x-4">
+                          <div className="flex-1">
+                            {editedProfile.cv_url ? (
+                              <div className="flex items-center gap-4">
+                                <span className="text-2xl">📄</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => window.open(editedProfile.cv_url, '_blank')}
+                                    className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors flex items-center gap-2"
+                                  >
+                                    <span>View CV</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => window.open(editedProfile.cv_download_url, '_blank')}
+                                    className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2"
+                                  >
+                                    <span>Download</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-600">No CV uploaded yet</div>
+                            )}
+                          </div>
+                          <input
+                            ref={cvInputRef}
+                            type="file"
+                            accept="application/pdf"
+                            onChange={handleCVChange}
+                            className="hidden"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => cvInputRef.current?.click()}
+                            className="btn-secondary"
+                            disabled={uploadingCV}
+                          >
+                            {uploadingCV ? 'Uploading...' : 'Upload New CV'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-4">
+                          <span className="text-2xl">📄</span>
+                          {profile.cv_url ? (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => window.open(profile.cv_url, '_blank')}
+                                className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors flex items-center gap-2"
+                              >
+                                <span>View CV</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => window.open(profile.cv_download_url, '_blank')}
+                                className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2"
+                              >
+                                <span>Download</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-600">No CV uploaded</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* LinkedIn URL */}
+                    <div>
+                      <label htmlFor="linkedin_url" className="block text-sm font-medium text-gray-700 mb-1">
+                        LinkedIn Profile
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="url"
+                          value={editedProfile.linkedin_url || ''}
+                          onChange={(e) => setEditedProfile({ ...editedProfile, linkedin_url: e.target.value })}
+                          className="w-full px-3 py-2 text-gray-600 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          placeholder="https://linkedin.com/in/your-profile"
+                        />
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-2xl">🔗</span>
+                          {profile.linkedin_url ? (
+                            <a 
+                              href={profile.linkedin_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-[--primary-color] hover:text-[--secondary-color] transition-colors"
+                            >
+                              View LinkedIn Profile
+                            </a>
+                          ) : (
+                            <span className="text-sm text-gray-600">No LinkedIn profile added</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

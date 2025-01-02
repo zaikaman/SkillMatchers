@@ -14,6 +14,9 @@ export type Profile = {
   languages?: string[]
   skills?: string[]
   has_completed_onboarding: boolean
+  cv_url?: string
+  cv_download_url?: string
+  linkedin_url?: string
 }
 
 export async function signUp(email: string, password: string, fullName: string) {
