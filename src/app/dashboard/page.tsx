@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Dashboard from '@/components/dashboard/Dashboard'
 import Loading from '@/components/Loading'
-import { getProfile } from '@/lib/actions'
+import { getProfile, getNewMatchesCount } from '@/lib/actions'
 import toast from 'react-hot-toast'
 import { Profile } from '@/lib/actions'
 
@@ -12,12 +12,17 @@ export default function DashboardPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [newMatches, setNewMatches] = useState(0)
 
   useEffect(() => {
-    async function loadProfile() {
+    async function loadData() {
       try {
-        const profileData = await getProfile()
+        const [profileData, matchesCount] = await Promise.all([
+          getProfile(),
+          getNewMatchesCount()
+        ])
         setProfile(profileData)
+        setNewMatches(matchesCount)
       } catch (error) {
         console.error('Error loading profile:', error)
         toast.error('Please login to access dashboard')
@@ -27,7 +32,7 @@ export default function DashboardPage() {
       }
     }
 
-    loadProfile()
+    loadData()
   }, [router])
 
   if (loading) {
@@ -40,7 +45,7 @@ export default function DashboardPage() {
 
   const userData = {
     name: profile.full_name,
-    matches: 5, // Tạm thời để số cứng, sau này sẽ lấy từ database
+    matches: newMatches,
     unreadMessages: 3,
     upcomingInterviews: 2
   }

@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '@/lib/supabase'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { Database } from '@/lib/database.types'
 
@@ -803,4 +803,26 @@ export async function getPotentialJobMatches() {
     }
     throw new Error('An error occurred while finding matching jobs')
   }
+}
+
+export async function getNewMatchesCount() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile) throw new Error('Profile not found')
+
+  const { count } = await supabase
+    .from('matches')
+    .select('*', { count: 'exact', head: true })
+    .eq(profile.role === 'worker' ? 'worker_id' : 'employer_id', user.id)
+    .eq('employer_status', 'accepted')
+    .eq('worker_status', 'accepted')
+
+  return count || 0
 } 
