@@ -1,6 +1,9 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import JobSelectModal from './JobSelectModal'
+import { getEmployerJobs } from '@/lib/actions'
+import { useRouter } from 'next/navigation'
 
 interface DashboardProps {
   userType: 'employer' | 'worker'
@@ -12,7 +15,26 @@ interface DashboardProps {
   }
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ userType, userData }) => {
+export default function Dashboard({ userType, userData }: DashboardProps) {
+  const router = useRouter()
+  const [isJobSelectModalOpen, setIsJobSelectModalOpen] = useState(false)
+  const [jobs, setJobs] = useState<Job[]>([])
+
+  useEffect(() => {
+    if (userType === 'employer') {
+      loadJobs()
+    }
+  }, [userType])
+
+  const loadJobs = async () => {
+    try {
+      const jobsData = await getEmployerJobs()
+      setJobs(jobsData)
+    } catch (error) {
+      console.error('Error loading jobs:', error)
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Welcome Message */}
@@ -67,8 +89,14 @@ const Dashboard: React.FC<DashboardProps> = ({ userType, userData }) => {
           </Link>
         )}
 
-        <Link 
-          href="/match"
+        <div
+          onClick={() => {
+            if (userType === 'employer') {
+              setIsJobSelectModalOpen(true)
+            } else {
+              router.push('/match')
+            }
+          }}
           className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-all text-center group cursor-pointer"
         >
           <div className="w-20 h-20 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
@@ -76,11 +104,11 @@ const Dashboard: React.FC<DashboardProps> = ({ userType, userData }) => {
           </div>
           <h2 className="text-xl font-bold gradient-text mb-2">Start Matching</h2>
           <p className="text-gray-600">
-            {userType === 'worker' 
-              ? 'Swipe through job opportunities' 
+            {userType === 'worker'
+              ? 'Swipe through job opportunities'
               : 'Swipe through potential candidates'}
           </p>
-        </Link>
+        </div>
 
         <div className="grid grid-cols-3 gap-6 w-full max-w-md">
           <Link 
@@ -114,8 +142,13 @@ const Dashboard: React.FC<DashboardProps> = ({ userType, userData }) => {
           </Link>
         </div>
       </div>
+
+      {/* Job Select Modal */}
+      <JobSelectModal
+        isOpen={isJobSelectModalOpen}
+        onClose={() => setIsJobSelectModalOpen(false)}
+        jobs={jobs}
+      />
     </div>
   )
-}
-
-export default Dashboard 
+} 

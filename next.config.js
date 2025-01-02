@@ -7,7 +7,8 @@ const nextConfig = {
     domains: [
       'images.unsplash.com',
       'res.cloudinary.com',
-      'pjkcmfosyckukzofylrk.supabase.co'
+      'pjkcmfosyckukzofylrk.supabase.co',
+      'i.pravatar.cc'
     ],
   },
 }
