@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies })
@@ -25,21 +26,21 @@ export async function GET(request: Request) {
 
         if (!profile?.has_completed_onboarding) {
           // If onboarding is not completed, redirect to onboarding page
-          return NextResponse.redirect(new URL('/onboarding', request.url))
+          return NextResponse.redirect(new URL('/onboarding', baseUrl))
         }
         
         // If onboarding is completed, redirect to dashboard
-        return NextResponse.redirect(new URL('/dashboard', request.url))
+        return NextResponse.redirect(new URL('/dashboard', baseUrl))
       } else {
         // If email is not confirmed, redirect to verify page
-        return NextResponse.redirect(new URL('/auth/verify', request.url))
+        return NextResponse.redirect(new URL('/auth/verify', baseUrl))
       }
     } catch {
       // If there's an error, redirect to login page
-      return NextResponse.redirect(new URL('/login', request.url))
+      return NextResponse.redirect(new URL('/login', baseUrl))
     }
   }
 
   // If no code is present, redirect to login page
-  return NextResponse.redirect(new URL('/login', request.url))
+  return NextResponse.redirect(new URL('/login', baseUrl))
 } 
