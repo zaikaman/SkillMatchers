@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { updateProfile, uploadAvatar } from '@/lib/actions'
 import { uploadToCloudinary } from '@/lib/cloudinary'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getProfile } from '@/lib/actions'
+import toast from 'react-hot-toast'
 
 type Role = 'worker' | 'employer' | null
 type Step = 1 | 2 | 3
@@ -17,9 +19,25 @@ export default function Onboarding() {
   const [role, setRole] = useState<Role>(null)
   const [skills, setSkills] = useState<string[]>([])
   const [languages, setLanguages] = useState<string[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [avatarUrl, setAvatarUrl] = useState<string>()
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        await getProfile()
+      } catch (error) {
+        console.error('Error loading profile:', error)
+        toast.error('Please login to access onboarding')
+        router.push('/login')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [router])
 
   useEffect(() => {
     const checkProfile = async () => {
@@ -104,6 +122,10 @@ export default function Onboarding() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return <div>Loading...</div>
   }
 
   return (
