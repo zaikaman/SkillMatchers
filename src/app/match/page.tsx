@@ -177,17 +177,11 @@ function MatchContent() {
               We will notify you when new candidates match your requirements.
             </p>
             <div className="space-y-4">
-              <button
-                onClick={() => setCurrentIndex(0)}
-                className="block w-full px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-              >
-                View from beginning
-              </button>
               <Link
-                href="/dashboard/employer/jobs"
+                href="/dashboard"
                 className="block w-full px-4 py-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-md hover:bg-pink-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
               >
-                Back to jobs list
+                Back to dashboard
               </Link>
             </div>
           </div>
@@ -335,12 +329,6 @@ function MatchContent() {
             We will notify you when new jobs match your skills.
           </p>
           <div className="space-y-4">
-            <button
-              onClick={() => setCurrentIndex(0)}
-              className="block w-full px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-            >
-              View from beginning
-            </button>
             <Link
               href="/dashboard"
               className="block w-full px-4 py-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-md hover:bg-pink-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
