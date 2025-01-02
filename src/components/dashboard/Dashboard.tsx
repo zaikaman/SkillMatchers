@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import JobSelectModal from './JobSelectModal'
-import { getEmployerJobs } from '@/lib/actions'
+import { getEmployerJobs, type Job } from '@/lib/actions'
 import { useRouter } from 'next/navigation'
 
 interface DashboardProps {
