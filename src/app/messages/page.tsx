@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { 
   getProfile, 
@@ -17,6 +18,7 @@ import toast from 'react-hot-toast'
 import type { Message, Conversation, MatchedWorker, MatchedJob } from '@/lib/actions'
 
 export default function MessagesPage() {
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -49,6 +51,15 @@ export default function MessagesPage() {
         ])
         setProfile(profileData)
         setConversations(conversationsData)
+
+        // Check for conversation ID in URL
+        const conversationId = searchParams.get('conversation')
+        if (conversationId) {
+          const conversation = conversationsData.find(c => c.id === conversationId)
+          if (conversation) {
+            setSelectedConversation(conversation)
+          }
+        }
 
         // Load matches based on user role
         const matchesData = await (profileData.role === 'employer' 
@@ -123,22 +134,15 @@ export default function MessagesPage() {
           conversationsSubscription.unsubscribe()
         }
       } catch (error) {
-        console.error('[MessagesPage] Error loading data:', {
-          error: error instanceof Error ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-            cause: error.cause
-          } : error
-        })
-        toast.error(error instanceof Error ? error.message : 'Could not load messages')
+        console.error('[MessagesPage] Error loading data:', error)
+        toast.error('Could not load messages')
       } finally {
         setLoading(false)
       }
     }
 
     loadData()
-  }, [])
+  }, [searchParams])
 
   const handleConversationUpdate = async (payload: any) => {
     const updatedConv = payload.new

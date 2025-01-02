@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import Confetti from 'react-confetti'
 import { useWindowSize } from 'react-use'
+import { useRouter } from 'next/navigation'
 
 interface MatchAlertProps {
   isVisible: boolean
@@ -23,6 +24,7 @@ export default function MatchAlert({
 }: MatchAlertProps) {
   const { width, height } = useWindowSize()
   const [shouldRender, setShouldRender] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (isVisible) {
@@ -34,6 +36,11 @@ export default function MatchAlert({
     setShouldRender(false)
     // Give time for exit animation
     setTimeout(onClose, 500)
+  }
+
+  const handleStartChatting = () => {
+    handleClose()
+    router.push('/matches')
   }
 
   return (
@@ -133,7 +140,7 @@ export default function MatchAlert({
               </div>
               
               <button
-                onClick={handleClose}
+                onClick={handleStartChatting}
                 className="px-8 py-3 bg-pink-600 text-white rounded-full font-medium hover:bg-pink-700 transition-colors"
               >
                 Start Chatting

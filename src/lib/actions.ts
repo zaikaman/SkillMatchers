@@ -826,6 +826,9 @@ export interface MatchedWorker {
   experience: string
   skills: string[]
   languages: string[]
+  availability: string
+  cv_url: string | null
+  linkedin_url: string | null
   job: {
     id: string
     title: string
@@ -860,6 +863,9 @@ type WorkerMatchData = {
     experience: string | null
     skills: string[] | null
     languages: string[] | null
+    availability: string | null
+    cv_url: string | null
+    linkedin_url: string | null
   }
   job: {
     id: string
@@ -902,7 +908,10 @@ export async function getMatchedWorkers() {
         bio,
         experience,
         skills,
-        languages
+        languages,
+        availability,
+        cv_url,
+        linkedin_url
       ),
       job:jobs!matches_job_id_fkey (
         id,
@@ -926,6 +935,9 @@ export async function getMatchedWorkers() {
     experience: match.worker.experience || '',
     skills: match.worker.skills || [],
     languages: match.worker.languages || [],
+    availability: match.worker.availability || '',
+    cv_url: match.worker.cv_url,
+    linkedin_url: match.worker.linkedin_url,
     job: {
       id: match.job.id,
       title: match.job.title,
