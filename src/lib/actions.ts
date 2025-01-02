@@ -115,4 +115,57 @@ export async function uploadAvatar(file: File) {
 
   await updateProfile({ avatar_url: publicUrl })
   return publicUrl
+}
+
+interface CreateJobData {
+  title: string
+  description: string
+  requirements: {
+    required: string[]
+    preferred: string[]
+  }
+  salary_range: {
+    min: number
+    max: number
+  }
+  location: string
+  work_type: 'remote' | 'hybrid' | 'onsite'
+}
+
+export async function createJob(jobData: CreateJobData) {
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError) throw userError
+  if (!user) throw new Error('Not authenticated')
+
+  // Get user profile to verify employer role
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError) throw profileError
+  if (!profile || profile.role !== 'employer') {
+    throw new Error('Only employers can create jobs')
+  }
+
+  // Create job
+  const { data, error } = await supabase
+    .from('jobs')
+    .insert({
+      employer_id: user.id,
+      title: jobData.title,
+      description: jobData.description,
+      requirements: jobData.requirements,
+      salary_range: jobData.salary_range,
+      location: jobData.location,
+      work_type: jobData.work_type,
+      status: 'published'
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
 } 

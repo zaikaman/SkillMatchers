@@ -54,6 +54,19 @@ const Dashboard: React.FC<DashboardProps> = ({ userType, userData }) => {
 
       {/* Main Actions */}
       <div className="flex flex-col items-center gap-6">
+        {userType === 'employer' && (
+          <Link 
+            href="/dashboard/employer/create-job"
+            className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-all text-center group cursor-pointer"
+          >
+            <div className="w-20 h-20 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <span className="text-4xl">✨</span>
+            </div>
+            <h2 className="text-xl font-bold gradient-text mb-2">Create New Job</h2>
+            <p className="text-gray-600">Post a new job opportunity</p>
+          </Link>
+        )}
+
         <Link 
           href="/match"
           className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-all text-center group cursor-pointer"
