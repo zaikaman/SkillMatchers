@@ -825,4 +825,186 @@ export async function getNewMatchesCount() {
     .eq('worker_status', 'accepted')
 
   return count || 0
+}
+
+export interface MatchedWorker {
+  id: string
+  name: string
+  avatar_url: string
+  bio: string
+  experience: string
+  skills: string[]
+  languages: string[]
+  job: {
+    id: string
+    title: string
+    location: string
+    work_type: string
+  }
+}
+
+export interface MatchedJob {
+  id: string
+  title: string
+  description: string
+  location: string
+  work_type: string
+  salary_range: {
+    min: number
+    max: number
+  }
+  employer: {
+    id: string
+    name: string
+    avatar_url: string
+  }
+}
+
+interface WorkerMatch {
+  worker_id: string
+  job_id: string
+  jobs: {
+    id: string
+    title: string
+    location: string
+    work_type: string
+  }
+  workers: {
+    id: string
+    full_name: string
+    avatar_url: string | null
+    bio: string | null
+    experience: string | null
+    skills: string[] | null
+    languages: string[] | null
+  }
+}
+
+interface JobMatch {
+  jobs: {
+    id: string
+    title: string
+    description: string
+    location: string
+    work_type: string
+    salary_range: {
+      min: number
+      max: number
+    }
+  }
+  employers: {
+    id: string
+    full_name: string
+    avatar_url: string | null
+  }
+}
+
+export async function getMatchedWorkers() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile) throw new Error('Profile not found')
+  if (profile.role !== 'employer') throw new Error('Only employers can view matched workers')
+
+  const { data: matches, error } = await supabase
+    .from('matches')
+    .select(`
+      worker_id,
+      job_id,
+      jobs (
+        id,
+        title,
+        location,
+        work_type
+      ),
+      workers:profiles!worker_id (
+        id,
+        full_name,
+        avatar_url,
+        bio,
+        experience,
+        skills,
+        languages
+      )
+    `)
+    .eq('employer_id', user.id)
+    .eq('employer_status', 'accepted')
+    .eq('worker_status', 'accepted') as { data: WorkerMatch[] | null, error: any }
+
+  if (error) throw error
+  if (!matches) return []
+
+  return matches.map(match => ({
+    id: match.workers.id,
+    name: match.workers.full_name,
+    avatar_url: match.workers.avatar_url || '',
+    bio: match.workers.bio || '',
+    experience: match.workers.experience || '',
+    skills: match.workers.skills || [],
+    languages: match.workers.languages || [],
+    job: {
+      id: match.jobs.id,
+      title: match.jobs.title,
+      location: match.jobs.location,
+      work_type: match.jobs.work_type
+    }
+  })) as MatchedWorker[]
+}
+
+export async function getMatchedJobs() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile) throw new Error('Profile not found')
+  if (profile.role !== 'worker') throw new Error('Only workers can view matched jobs')
+
+  const { data: matches, error } = await supabase
+    .from('matches')
+    .select(`
+      jobs (
+        id,
+        title,
+        description,
+        location,
+        work_type,
+        salary_range
+      ),
+      employers:profiles!employer_id (
+        id,
+        full_name,
+        avatar_url
+      )
+    `)
+    .eq('worker_id', user.id)
+    .eq('employer_status', 'accepted')
+    .eq('worker_status', 'accepted') as { data: JobMatch[] | null, error: any }
+
+  if (error) throw error
+  if (!matches) return []
+
+  return matches.map(match => ({
+    id: match.jobs.id,
+    title: match.jobs.title,
+    description: match.jobs.description,
+    location: match.jobs.location,
+    work_type: match.jobs.work_type,
+    salary_range: match.jobs.salary_range,
+    employer: {
+      id: match.employers.id,
+      name: match.employers.full_name,
+      avatar_url: match.employers.avatar_url || ''
+    }
+  })) as MatchedJob[]
 } 
