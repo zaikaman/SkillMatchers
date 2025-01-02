@@ -1,22 +1,45 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { createJob } from '@/lib/actions'
+import { getJob, updateJob, type Job } from '@/lib/actions'
+import { use } from 'react'
 import SkillSelect from '@/components/jobs/SkillSelect'
 import type { Skill } from '@/lib/constants'
 
-export default function CreateJob() {
+export default function EditJobPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const [job, setJob] = useState<Job | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [requiredSkills, setRequiredSkills] = useState<Skill[]>([])
   const [preferredSkills, setPreferredSkills] = useState<Skill[]>([])
 
+  useEffect(() => {
+    loadJob()
+  }, [resolvedParams.id])
+
+  const loadJob = async () => {
+    try {
+      const jobData = await getJob(resolvedParams.id)
+      setJob(jobData)
+      setRequiredSkills(jobData.requirements.required)
+      setPreferredSkills(jobData.requirements.preferred)
+    } catch (error) {
+      console.error('Error loading job:', error)
+      toast.error('Failed to load job')
+      router.push('/dashboard/employer/jobs')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setIsLoading(true)
+    setSaving(true)
 
     try {
       const formData = new FormData(e.currentTarget)
@@ -35,20 +58,38 @@ export default function CreateJob() {
         work_type: formData.get('work_type') as 'remote' | 'hybrid' | 'onsite',
       }
 
-      await createJob(jobData)
-      toast.success('Job created successfully!')
+      await updateJob(resolvedParams.id, jobData)
+      toast.success('Job updated successfully!')
       router.push('/dashboard/employer/jobs')
     } catch (error) {
-      console.error('Error creating job:', error)
-      toast.error('Failed to create job. Please try again.')
+      console.error('Error updating job:', error)
+      toast.error('Failed to update job. Please try again.')
     } finally {
-      setIsLoading(false)
+      setSaving(false)
     }
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+      </div>
+    )
+  }
+
+  if (!job) return null
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Create New Job</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Edit Job</h1>
+        <Link
+          href="/dashboard/employer/jobs"
+          className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+        >
+          Cancel
+        </Link>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
@@ -60,8 +101,8 @@ export default function CreateJob() {
             name="title"
             id="title"
             required
+            defaultValue={job.title}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-pink-500 focus:outline-none focus:ring-pink-500"
-            placeholder="e.g. Senior Frontend Developer"
           />
         </div>
 
@@ -74,8 +115,8 @@ export default function CreateJob() {
             id="description"
             required
             rows={5}
+            defaultValue={job.description}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-pink-500 focus:outline-none focus:ring-pink-500"
-            placeholder="Describe the role, responsibilities, and ideal candidate..."
           />
         </div>
 
@@ -118,8 +159,8 @@ export default function CreateJob() {
               name="salary_min"
               id="salary_min"
               required
+              defaultValue={job.salary_range.min}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-pink-500 focus:outline-none focus:ring-pink-500"
-              placeholder="e.g. 50000"
             />
           </div>
 
@@ -132,8 +173,8 @@ export default function CreateJob() {
               name="salary_max"
               id="salary_max"
               required
+              defaultValue={job.salary_range.max}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-pink-500 focus:outline-none focus:ring-pink-500"
-              placeholder="e.g. 80000"
             />
           </div>
         </div>
@@ -147,8 +188,8 @@ export default function CreateJob() {
             name="location"
             id="location"
             required
+            defaultValue={job.location}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-pink-500 focus:outline-none focus:ring-pink-500"
-            placeholder="e.g. Ho Chi Minh City, Vietnam"
           />
         </div>
 
@@ -160,6 +201,7 @@ export default function CreateJob() {
             name="work_type"
             id="work_type"
             required
+            defaultValue={job.work_type}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-pink-500 focus:outline-none focus:ring-pink-500"
           >
             <option value="remote">Remote</option>
@@ -177,10 +219,10 @@ export default function CreateJob() {
           </Link>
           <button
             type="submit"
-            disabled={isLoading || requiredSkills.length === 0}
+            disabled={saving}
             className="px-4 py-2 text-sm font-medium text-white bg-pink-600 border border-transparent rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50"
           >
-            {isLoading ? 'Creating...' : 'Create Job'}
+            {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </form>

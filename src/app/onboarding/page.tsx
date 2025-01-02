@@ -10,6 +10,8 @@ import toast from 'react-hot-toast'
 import Loading from '@/components/Loading'
 import Link from 'next/link'
 import { uploadCV } from '@/lib/storage'
+import SkillSelect from '@/components/jobs/SkillSelect'
+import type { Skill } from '@/lib/constants'
 
 type Role = 'worker' | 'employer' | null
 type Step = 1 | 2 | 3
@@ -19,7 +21,7 @@ export default function Onboarding() {
   const supabase = createClientComponentClient()
   const [step, setStep] = useState<Step>(1)
   const [role, setRole] = useState<Role>(null)
-  const [skills, setSkills] = useState<string[]>([])
+  const [skills, setSkills] = useState<Skill[]>([])
   const [languages, setLanguages] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [avatarUrl, setAvatarUrl] = useState<string>()
@@ -245,29 +247,17 @@ export default function Onboarding() {
 
                 <form onSubmit={handleSkillsSubmit} className="max-w-2xl mx-auto">
                   <div className="space-y-4 mb-8">
-                    <div className="flex flex-wrap gap-2">
-                      {['JavaScript', 'Python', 'React', 'Node.js', 'UI/UX Design', 'Digital Marketing', 
-                        'Data Analysis', 'Machine Learning', 'Product Management', 'Business Strategy'].map((skill) => (
-                        <button
-                          key={skill}
-                          type="button"
-                          onClick={() => {
-                            if (skills.includes(skill)) {
-                              setSkills(skills.filter(s => s !== skill))
-                            } else {
-                              setSkills([...skills, skill])
-                            }
-                          }}
-                          className={`px-4 py-2 rounded-full text-sm transition-all ${
-                            skills.includes(skill)
-                              ? 'gradient-bg text-white'
-                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                          }`}
-                        >
-                          {skill}
-                        </button>
-                      ))}
-                    </div>
+                    <SkillSelect
+                      selectedSkills={skills}
+                      onChange={setSkills}
+                      placeholder={role === 'worker' ? 'Select your skills...' : 'Select required skills...'}
+                      className="mb-4"
+                    />
+                    {skills.length === 0 && (
+                      <p className="text-sm text-red-500">
+                        Please select at least one skill
+                      </p>
+                    )}
                   </div>
 
                   <button

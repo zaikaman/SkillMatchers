@@ -13,7 +13,7 @@ export default function Home() {
               Find Your Perfect <br/> Skill Match
             </h1>
             <p className="body-lg text-gray-600 mb-6 md:mb-8 text-sm md:text-base">Swipe right on skills that match your goals. Connect with mentors and collaborators who complement your journey.</p>
-            <Link href="/get-started" className="btn-primary text-sm md:text-base">Start Matching Now</Link>
+            <Link href="/dashboard" className="btn-primary text-sm md:text-base">Start Matching Now</Link>
           </div>
           
           <div className="mt-8 md:mt-16 relative">
@@ -129,7 +129,7 @@ export default function Home() {
           <div className="slide-in">
             <h2 className="heading-lg gradient-text mb-4 md:mb-6 text-2xl md:text-4xl">Ready to Find Your Match?</h2>
             <p className="body-lg text-gray-600 mb-6 md:mb-8 text-sm md:text-base">Join thousands of people finding their perfect skill matches every day.</p>
-            <Link href="/join" className="btn-primary text-sm md:text-base">Start Matching</Link>
+            <Link href="/dashboard" className="btn-primary text-sm md:text-base">Start Matching</Link>
           </div>
         </div>
       </section>
