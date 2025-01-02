@@ -8,6 +8,7 @@ import Loading from '@/components/Loading'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { useProfile } from '@/components/providers/profile'
+import MatchAlert from '@/components/match/MatchAlert'
 
 interface Candidate {
   id: string
@@ -54,6 +55,10 @@ function MatchContent() {
   const [error, setError] = useState<string | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null)
+  const [showMatchAlert, setShowMatchAlert] = useState(false)
+  const [matchedEmployer, setMatchedEmployer] = useState<{ name: string; avatar: string } | null>(null)
+  const [matchedWorker, setMatchedWorker] = useState<{ name: string; avatar: string } | null>(null)
+  const [pendingNextProfile, setPendingNextProfile] = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -99,38 +104,90 @@ function MatchContent() {
     loadData()
   }, [jobId, profile])
 
+  const handleMatch = (result: any, matchData: { employer: { name: string; avatar: string }; worker: { name: string; avatar: string } }) => {
+    if (result.employer_status === 'accepted' && result.worker_status === 'accepted') {
+      setMatchedEmployer(matchData.employer)
+      setMatchedWorker(matchData.worker)
+      setPendingNextProfile(true)
+      setShowMatchAlert(true)
+    } else {
+      // If no match, move to next profile immediately
+      setSwipeDirection(null)
+      setCurrentIndex((prev) => prev + 1)
+    }
+  }
+
   const handleSwipe = async (direction: 'left' | 'right') => {
     if (!profile) return
 
     setSwipeDirection(direction)
 
-    try {
-      if (direction === 'right') {
+    if (direction === 'right') {
+      try {
+        let matchResult;
+        
         if (profile.role === 'employer' && job && candidates[currentIndex]) {
-          await createMatch(
+          matchResult = await createMatch(
             job.id,
             candidates[currentIndex].id,
             job.employer_id,
             'accepted'
           )
+          
+          handleMatch(matchResult, {
+            employer: {
+              name: profile.full_name || 'Employer',
+              avatar: profile.avatar_url || ''
+            },
+            worker: {
+              name: candidates[currentIndex].name,
+              avatar: candidates[currentIndex].avatar_url
+            }
+          })
         } else if (profile.role === 'worker' && jobs[currentIndex]) {
-          await createMatch(
+          matchResult = await createMatch(
             jobs[currentIndex].id,
             profile.id,
             jobs[currentIndex].employer.id,
             'accepted'
           )
+          
+          handleMatch(matchResult, {
+            worker: {
+              name: profile.full_name || 'Worker',
+              avatar: profile.avatar_url || ''
+            },
+            employer: {
+              name: jobs[currentIndex].employer.name,
+              avatar: jobs[currentIndex].employer.avatar_url
+            }
+          })
         }
+      } catch (error) {
+        console.error('Error creating match:', error)
+        toast.error('Could not save match result. Please try again.')
+        setSwipeDirection(null)
       }
-    } catch (error) {
-      console.error('Error creating match:', error)
-      toast.error('Could not save match result. Please try again.')
+    } else {
+      // For left swipe, update immediately
+      setTimeout(() => {
+        setSwipeDirection(null)
+        setCurrentIndex((prev) => prev + 1)
+      }, 300)
     }
+  }
 
-    setTimeout(() => {
+  const handleCloseMatchAlert = () => {
+    setShowMatchAlert(false)
+    setMatchedEmployer(null)
+    setMatchedWorker(null)
+    
+    // Only move to next profile after closing the match alert
+    if (pendingNextProfile) {
+      setPendingNextProfile(false)
       setSwipeDirection(null)
       setCurrentIndex((prev) => prev + 1)
-    }, 300)
+    }
   }
 
   if (loading) return <Loading />
@@ -177,6 +234,12 @@ function MatchContent() {
               We will notify you when new candidates match your requirements.
             </p>
             <div className="space-y-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="block w-full px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+              >
+                Refresh
+              </button>
               <Link
                 href="/dashboard"
                 className="block w-full px-4 py-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-md hover:bg-pink-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
@@ -329,6 +392,12 @@ function MatchContent() {
             We will notify you when new jobs match your skills.
           </p>
           <div className="space-y-4">
+            <button
+              onClick={() => window.location.reload()}
+              className="block w-full px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+            >
+              Refresh
+            </button>
             <Link
               href="/dashboard"
               className="block w-full px-4 py-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-md hover:bg-pink-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
@@ -344,98 +413,108 @@ function MatchContent() {
   const currentJob = jobs[currentIndex]
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-white">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          {/* Job Card */}
-          <div
-            className={`bg-white rounded-2xl shadow-xl overflow-hidden transition-transform duration-300 ${
-              swipeDirection === 'left' ? '-translate-x-full' : 
-              swipeDirection === 'right' ? 'translate-x-full' : ''
-            }`}
-          >
-            {/* Company Info */}
-            <div className="p-6 border-b">
-              <div className="flex items-center gap-4">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden">
-                  <Image
-                    src={currentJob.employer.avatar_url || '/default-company.png'}
-                    alt={currentJob.employer.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold">{currentJob.employer.name}</h2>
-                  <p className="text-gray-600">{currentJob.location} • {currentJob.work_type}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Job Info */}
-            <div className="p-6">
-              <h3 className="text-2xl font-bold mb-4">{currentJob.title}</h3>
-              <p className="text-gray-700 mb-6">{currentJob.description}</p>
-
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-semibold mb-2">Required Skills</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {currentJob.requirements.required.map((skill) => (
-                      <span
-                        key={skill}
-                        className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm"
-                      >
-                        {skill}
-                      </span>
-                    ))}
+    <>
+      <main className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-white">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            {/* Job Card */}
+            <div
+              className={`bg-white rounded-2xl shadow-xl overflow-hidden transition-transform duration-300 ${
+                swipeDirection === 'left' ? '-translate-x-full' : 
+                swipeDirection === 'right' ? 'translate-x-full' : ''
+              }`}
+            >
+              {/* Company Info */}
+              <div className="p-6 border-b">
+                <div className="flex items-center gap-4">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden">
+                    <Image
+                      src={currentJob.employer.avatar_url || '/default-company.png'}
+                      alt={currentJob.employer.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">{currentJob.employer.name}</h2>
+                    <p className="text-gray-600">{currentJob.location} • {currentJob.work_type}</p>
                   </div>
                 </div>
+              </div>
 
-                {currentJob.requirements.preferred.length > 0 && (
+              {/* Job Info */}
+              <div className="p-6">
+                <h3 className="text-2xl font-bold mb-4">{currentJob.title}</h3>
+                <p className="text-gray-700 mb-6">{currentJob.description}</p>
+
+                <div className="space-y-6">
                   <div>
-                    <h4 className="font-semibold mb-2">Preferred Skills</h4>
+                    <h4 className="font-semibold mb-2">Required Skills</h4>
                     <div className="flex flex-wrap gap-2">
-                      {currentJob.requirements.preferred.map((skill) => (
+                      {currentJob.requirements.required.map((skill) => (
                         <span
                           key={skill}
-                          className="px-3 py-1 bg-pink-100 text-pink-800 rounded-full text-sm"
+                          className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm"
                         >
                           {skill}
                         </span>
                       ))}
                     </div>
                   </div>
-                )}
 
-                <div>
-                  <h4 className="font-semibold mb-2">Salary Range</h4>
-                  <p className="text-gray-700">
-                    ${currentJob.salary_range.min.toLocaleString()} - ${currentJob.salary_range.max.toLocaleString()} / year
-                  </p>
+                  {currentJob.requirements.preferred.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Preferred Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {currentJob.requirements.preferred.map((skill) => (
+                          <span
+                            key={skill}
+                            className="px-3 py-1 bg-pink-100 text-pink-800 rounded-full text-sm"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <h4 className="font-semibold mb-2">Salary Range</h4>
+                    <p className="text-gray-700">
+                      ${currentJob.salary_range.min.toLocaleString()} - ${currentJob.salary_range.max.toLocaleString()} / year
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex justify-center gap-4 p-6 bg-gray-50">
-              <button
-                onClick={() => handleSwipe('left')}
-                className="w-16 h-16 flex items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
-              >
-                <span className="text-2xl">✕</span>
-              </button>
-              <button
-                onClick={() => handleSwipe('right')}
-                className="w-16 h-16 flex items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
-              >
-                <span className="text-2xl">✓</span>
-              </button>
+              {/* Action Buttons */}
+              <div className="flex justify-center gap-4 p-6 bg-gray-50">
+                <button
+                  onClick={() => handleSwipe('left')}
+                  className="w-16 h-16 flex items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                >
+                  <span className="text-2xl">✕</span>
+                </button>
+                <button
+                  onClick={() => handleSwipe('right')}
+                  className="w-16 h-16 flex items-center justify-center rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
+                >
+                  <span className="text-2xl">✓</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+      <MatchAlert
+        isVisible={showMatchAlert}
+        onClose={handleCloseMatchAlert}
+        employerName={matchedEmployer?.name || ''}
+        employerAvatar={matchedEmployer?.avatar || ''}
+        workerName={matchedWorker?.name || ''}
+        workerAvatar={matchedWorker?.avatar || ''}
+      />
+    </>
   )
 }
 

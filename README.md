@@ -1,6 +1,6 @@
 # SkillMatchers
 
-SkillMatch is a modern web platform that connects employers with skilled workers, inspired by the social matching concept of Litmatch but specifically designed for the professional employment market.
+SkillMatch is a modern web platform that connects employers with skilled workers, inspired by the social matching concept of Tinder but specifically designed for the professional employment market.
 
 Database: 
 --
