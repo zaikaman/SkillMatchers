@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+const authCallbackUrl = process.env.NEXT_PUBLIC_SITE_AUTH_CALLBACK || `${siteUrl}/auth/callback`
 
 export type Profile = {
   id: string
@@ -23,7 +24,7 @@ export async function signUp(email: string, password: string, fullName: string) 
       data: {
         full_name: fullName,
       },
-      emailRedirectTo: `${siteUrl}/auth/callback`,
+      emailRedirectTo: authCallbackUrl,
     },
   })
   
@@ -51,7 +52,7 @@ export const signInWithGoogle = async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+        redirectTo: authCallbackUrl
       }
     })
     
@@ -67,7 +68,7 @@ export async function signInWithLinkedIn() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'linkedin',
     options: {
-      redirectTo: `${siteUrl}/auth/callback`,
+      redirectTo: authCallbackUrl,
     },
   })
   
