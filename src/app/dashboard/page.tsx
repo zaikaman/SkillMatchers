@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Dashboard from '@/components/dashboard/Dashboard'
+import Loading from '@/components/Loading'
 import { getProfile } from '@/lib/actions'
 import toast from 'react-hot-toast'
 import { Profile } from '@/lib/actions'
@@ -30,7 +31,7 @@ export default function DashboardPage() {
   }, [router])
 
   if (loading) {
-    return <div>Loading...</div>
+    return <Loading />
   }
 
   if (!profile) {

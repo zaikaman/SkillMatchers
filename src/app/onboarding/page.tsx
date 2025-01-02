@@ -8,6 +8,7 @@ import { uploadToCloudinary } from '@/lib/cloudinary'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { getProfile } from '@/lib/actions'
 import toast from 'react-hot-toast'
+import Loading from '@/components/Loading'
 
 type Role = 'worker' | 'employer' | null
 type Step = 1 | 2 | 3
@@ -125,7 +126,7 @@ export default function Onboarding() {
   }
 
   if (loading) {
-    return <div>Loading...</div>
+    return <Loading />
   }
 
   return (
