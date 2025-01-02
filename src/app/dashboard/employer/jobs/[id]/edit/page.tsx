@@ -26,8 +26,8 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
     try {
       const jobData = await getJob(resolvedParams.id)
       setJob(jobData)
-      setRequiredSkills(jobData.requirements.required)
-      setPreferredSkills(jobData.requirements.preferred)
+      setRequiredSkills(jobData.requirements.required as Skill[])
+      setPreferredSkills(jobData.requirements.preferred as Skill[])
     } catch (error) {
       console.error('Error loading job:', error)
       toast.error('Failed to load job')
