@@ -294,9 +294,11 @@ export default function MessagesPage() {
     <main className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="grid grid-cols-12 min-h-[600px]">
+          <div className="grid md:grid-cols-12 min-h-[600px]">
             {/* Conversations List */}
-            <div className="col-span-4 border-r border-gray-200">
+            <div className={`${
+              selectedConversation ? 'hidden md:block' : 'block'
+            } md:col-span-4 border-r border-gray-200`}>
               <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">Messages</h2>
@@ -308,7 +310,7 @@ export default function MessagesPage() {
                   </button>
                 </div>
               </div>
-              <div className="overflow-y-auto h-[calc(600px-4rem)]">
+              <div className="overflow-y-auto h-[calc(100vh-16rem)] md:h-[calc(600px-4rem)]">
                 {showNewChat ? (
                   // Show matches list
                   <div>
@@ -386,12 +388,22 @@ export default function MessagesPage() {
             </div>
 
             {/* Chat Area */}
-            <div className="col-span-8">
+            <div className={`${
+              selectedConversation ? 'block' : 'hidden md:block'
+            } md:col-span-8`}>
               {selectedConversation ? (
                 <>
                   {/* Chat Header */}
                   <div className="p-4 border-b border-gray-200">
                     <div className="flex items-center space-x-3">
+                      <button 
+                        onClick={() => setSelectedConversation(null)}
+                        className="md:hidden p-2 hover:bg-gray-100 rounded-full"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
                       <Image
                         src={selectedConversation.user.avatar_url || '/default-avatar.png'}
                         alt={selectedConversation.user.full_name}
@@ -409,7 +421,7 @@ export default function MessagesPage() {
                   </div>
 
                   {/* Messages */}
-                  <div ref={chatContainerRef} className="p-4 h-[calc(600px-8rem)] overflow-y-auto">
+                  <div ref={chatContainerRef} className="p-4 h-[calc(100vh-20rem)] md:h-[calc(600px-8rem)] overflow-y-auto">
                     <div className="space-y-4">
                       {messages.map((message) => (
                         <div
@@ -419,7 +431,7 @@ export default function MessagesPage() {
                           }`}
                         >
                           <div
-                            className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                            className={`max-w-[85%] md:max-w-[70%] rounded-lg px-4 py-2 ${
                               message.sender_id === profile.id
                                 ? 'bg-pink-500 text-white'
                                 : 'bg-gray-100'
@@ -436,7 +448,7 @@ export default function MessagesPage() {
                   </div>
 
                   {/* Message Input */}
-                  <div className="p-4 border-t border-gray-200">
+                  <div className="p-4 border-t border-gray-200 bg-white">
                     <form onSubmit={handleSendMessage} className="flex space-x-4">
                       <input
                         type="text"
@@ -456,7 +468,7 @@ export default function MessagesPage() {
                   </div>
                 </>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="hidden md:flex items-center justify-center h-full text-gray-500">
                   Select a conversation or start a new one
                 </div>
               )}

@@ -255,20 +255,6 @@ export default function MatchesPage() {
                   </div>
 
                   <div className="mt-4">
-                    <h3 className="font-medium text-gray-900 mb-2">Required Skills</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {job.required_skills.map(skill => (
-                        <span
-                          key={skill}
-                          className="px-2 py-1 bg-pink-100 text-pink-800 rounded-full text-xs"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
                     <h3 className="font-medium text-gray-900 mb-2">Salary Range</h3>
                     <p className="text-gray-900 font-medium">
                       ${job.salary_range.min.toLocaleString()} - ${job.salary_range.max.toLocaleString()} / year
