@@ -6,15 +6,18 @@ import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
 export default function Header() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { user } = useAuth()
+  const router = useRouter()
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     toast.success('You have been signed out successfully')
+    router.push('/login')
   }
 
   return (
