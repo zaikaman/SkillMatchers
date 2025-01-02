@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { getJob, getPotentialMatches, getPotentialJobMatches, createMatch, type Job } from '@/lib/actions'
@@ -42,7 +42,7 @@ interface JobMatch {
   }
 }
 
-export default function MatchPage() {
+function MatchContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const jobId = searchParams.get('jobId')
@@ -448,5 +448,13 @@ export default function MatchPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function MatchPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <MatchContent />
+    </Suspense>
   )
 } 
