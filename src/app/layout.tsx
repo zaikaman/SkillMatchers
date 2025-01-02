@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Toaster } from 'react-hot-toast';
+import { ProfileProvider } from '@/components/providers/profile';
 
 const outfit = Outfit({ 
   subsets: ["latin"],
@@ -28,10 +29,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${outfit.variable}`}>
       <body>
-        <Toaster position="top-center" />
-        <Header />
-        {children}
-        <Footer />
+        <ProfileProvider>
+          <Toaster position="top-center" />
+          <Header />
+          {children}
+          <Footer />
+        </ProfileProvider>
       </body>
     </html>
   );
