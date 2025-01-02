@@ -350,7 +350,8 @@ export async function getPotentialMatches(jobId: string) {
         experience,
         skills,
         languages,
-        linkedin_url
+        linkedin_url,
+        cv_url
       `)
       .eq('role', 'worker')
 
@@ -412,7 +413,8 @@ export async function getPotentialMatches(jobId: string) {
       experience: worker.experience || '',
       skills: worker.skills || [],
       languages: worker.languages || [],
-      linkedin_url: worker.linkedin_url
+      linkedin_url: worker.linkedin_url,
+      cv_url: worker.cv_url
     }))
 
     return candidates
