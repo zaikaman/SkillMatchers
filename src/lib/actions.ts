@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from './supabase'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { Database } from '@/lib/database.types'
 
@@ -806,21 +806,12 @@ export async function getPotentialJobMatches() {
 }
 
 export async function getNewMatchesCount() {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile) throw new Error('Profile not found')
+  const profile = await getProfile()
 
   const { count } = await supabase
     .from('matches')
     .select('*', { count: 'exact', head: true })
-    .eq(profile.role === 'worker' ? 'worker_id' : 'employer_id', user.id)
+    .eq(profile.role === 'worker' ? 'worker_id' : 'employer_id', profile.id)
     .eq('employer_status', 'accepted')
     .eq('worker_status', 'accepted')
 
@@ -860,16 +851,8 @@ export interface MatchedJob {
   }
 }
 
-interface WorkerMatch {
-  worker_id: string
-  job_id: string
-  jobs: {
-    id: string
-    title: string
-    location: string
-    work_type: string
-  }
-  workers: {
+type WorkerMatchData = {
+  worker: {
     id: string
     full_name: string
     avatar_url: string | null
@@ -878,10 +861,16 @@ interface WorkerMatch {
     skills: string[] | null
     languages: string[] | null
   }
+  job: {
+    id: string
+    title: string
+    location: string
+    work_type: string
+  }
 }
 
-interface JobMatch {
-  jobs: {
+type JobMatchData = {
+  job: {
     id: string
     title: string
     description: string
@@ -892,7 +881,7 @@ interface JobMatch {
       max: number
     }
   }
-  employers: {
+  employer: {
     id: string
     full_name: string
     avatar_url: string | null
@@ -900,30 +889,13 @@ interface JobMatch {
 }
 
 export async function getMatchedWorkers() {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile) throw new Error('Profile not found')
+  const profile = await getProfile()
   if (profile.role !== 'employer') throw new Error('Only employers can view matched workers')
 
   const { data: matches, error } = await supabase
     .from('matches')
     .select(`
-      worker_id,
-      job_id,
-      jobs (
-        id,
-        title,
-        location,
-        work_type
-      ),
-      workers:profiles!worker_id (
+      worker:profiles!matches_worker_id_fkey (
         id,
         full_name,
         avatar_url,
@@ -931,49 +903,46 @@ export async function getMatchedWorkers() {
         experience,
         skills,
         languages
+      ),
+      job:jobs!matches_job_id_fkey (
+        id,
+        title,
+        location,
+        work_type
       )
     `)
-    .eq('employer_id', user.id)
+    .eq('employer_id', profile.id)
     .eq('employer_status', 'accepted')
-    .eq('worker_status', 'accepted') as { data: WorkerMatch[] | null, error: any }
+    .eq('worker_status', 'accepted') as { data: WorkerMatchData[] | null, error: any }
 
   if (error) throw error
   if (!matches) return []
 
   return matches.map(match => ({
-    id: match.workers.id,
-    name: match.workers.full_name,
-    avatar_url: match.workers.avatar_url || '',
-    bio: match.workers.bio || '',
-    experience: match.workers.experience || '',
-    skills: match.workers.skills || [],
-    languages: match.workers.languages || [],
+    id: match.worker.id,
+    name: match.worker.full_name,
+    avatar_url: match.worker.avatar_url || '',
+    bio: match.worker.bio || '',
+    experience: match.worker.experience || '',
+    skills: match.worker.skills || [],
+    languages: match.worker.languages || [],
     job: {
-      id: match.jobs.id,
-      title: match.jobs.title,
-      location: match.jobs.location,
-      work_type: match.jobs.work_type
+      id: match.job.id,
+      title: match.job.title,
+      location: match.job.location,
+      work_type: match.job.work_type
     }
   })) as MatchedWorker[]
 }
 
 export async function getMatchedJobs() {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile) throw new Error('Profile not found')
+  const profile = await getProfile()
   if (profile.role !== 'worker') throw new Error('Only workers can view matched jobs')
 
   const { data: matches, error } = await supabase
     .from('matches')
     .select(`
-      jobs (
+      job:jobs!matches_job_id_fkey (
         id,
         title,
         description,
@@ -981,30 +950,283 @@ export async function getMatchedJobs() {
         work_type,
         salary_range
       ),
-      employers:profiles!employer_id (
+      employer:profiles!matches_employer_id_fkey (
         id,
         full_name,
         avatar_url
       )
     `)
-    .eq('worker_id', user.id)
+    .eq('worker_id', profile.id)
     .eq('employer_status', 'accepted')
-    .eq('worker_status', 'accepted') as { data: JobMatch[] | null, error: any }
+    .eq('worker_status', 'accepted') as { data: JobMatchData[] | null, error: any }
 
   if (error) throw error
   if (!matches) return []
 
   return matches.map(match => ({
-    id: match.jobs.id,
-    title: match.jobs.title,
-    description: match.jobs.description,
-    location: match.jobs.location,
-    work_type: match.jobs.work_type,
-    salary_range: match.jobs.salary_range,
+    id: match.job.id,
+    title: match.job.title,
+    description: match.job.description,
+    location: match.job.location,
+    work_type: match.job.work_type,
+    salary_range: match.job.salary_range,
     employer: {
-      id: match.employers.id,
-      name: match.employers.full_name,
-      avatar_url: match.employers.avatar_url || ''
+      id: match.employer.id,
+      name: match.employer.full_name,
+      avatar_url: match.employer.avatar_url || ''
     }
   })) as MatchedJob[]
+}
+
+// Messages types
+export type Message = {
+  id: string
+  sender_id: string
+  receiver_id: string
+  content: string
+  created_at: string
+  read: boolean
+}
+
+export type Conversation = {
+  id: string
+  user: {
+    id: string
+    full_name: string
+    avatar_url: string
+    last_seen: string
+  }
+  last_message?: Message
+  unread_count: number
+}
+
+export async function getConversations(): Promise<Conversation[]> {
+  try {
+    const profile = await getProfile()
+
+    // Get all conversations where the current user is either user_1 or user_2
+    const { data: conversations, error } = await supabase
+      .from('conversations')
+      .select(`
+        id,
+        user_1_id,
+        user_2_id,
+        messages (
+          id,
+          content,
+          created_at,
+          sender_id,
+          receiver_id,
+          read
+        )
+      `)
+      .or(`user_1_id.eq.${profile.id},user_2_id.eq.${profile.id}`)
+      .order('updated_at', { ascending: false })
+
+    if (error) {
+      console.error('[getConversations] Database error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      })
+      throw new Error(`Failed to get conversations: ${error.message}`)
+    }
+
+    if (!conversations) {
+      console.error('[getConversations] No conversations data returned')
+      return []
+    }
+
+    // Get unread count and user profiles for each conversation
+    const conversationsWithUnread = await Promise.all(
+      conversations.map(async (conv) => {
+        try {
+          // Get unread count
+          const { count, error: countError } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', conv.id)
+            .eq('receiver_id', profile.id)
+            .eq('read', false)
+
+          if (countError) {
+            console.error('[getConversations] Error getting unread count:', {
+              conversationId: conv.id,
+              error: countError
+            })
+            return null
+          }
+
+          // Get the other user's ID
+          const otherUserId = conv.user_1_id === profile.id ? conv.user_2_id : conv.user_1_id
+
+          // Get the other user's profile
+          const { data: otherUserProfile, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, updated_at')
+            .eq('id', otherUserId)
+            .single()
+
+          if (profileError) {
+            console.error('[getConversations] Error getting user profile:', {
+              conversationId: conv.id,
+              userId: otherUserId,
+              error: profileError
+            })
+            return null
+          }
+
+          if (!otherUserProfile) {
+            console.error('[getConversations] Missing user data:', {
+              conversationId: conv.id,
+              user1Id: conv.user_1_id,
+              user2Id: conv.user_2_id,
+              currentUserId: profile.id
+            })
+            return null
+          }
+
+          // Get the last message if any
+          const lastMessage = conv.messages?.[0]
+
+          return {
+            id: conv.id,
+            user: {
+              id: otherUserProfile.id,
+              full_name: otherUserProfile.full_name,
+              avatar_url: otherUserProfile.avatar_url || '',
+              last_seen: otherUserProfile.updated_at
+            },
+            last_message: lastMessage,
+            unread_count: count || 0
+          } as Conversation
+        } catch (error) {
+          console.error('[getConversations] Error processing conversation:', {
+            conversationId: conv.id,
+            error: error instanceof Error ? {
+              message: error.message,
+              stack: error.stack
+            } : error
+          })
+          return null
+        }
+      })
+    )
+
+    // Filter out any failed conversations
+    const validConversations = conversationsWithUnread.filter((conv): conv is Conversation => conv !== null)
+
+    if (validConversations.length === 0 && conversationsWithUnread.length > 0) {
+      console.error('[getConversations] All conversations failed to process')
+      throw new Error('Failed to process conversations data')
+    }
+
+    return validConversations
+  } catch (error) {
+    console.error('[getConversations] Unexpected error:', {
+      error: error instanceof Error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        cause: error.cause
+      } : error
+    })
+    throw error
+  }
+}
+
+// Get messages for a specific conversation
+export async function getMessages(conversationId: string): Promise<Message[]> {
+  try {
+    const profile = await getProfile()
+
+    const { data: messages, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true })
+
+    if (error) throw error
+
+    // Mark unread messages as read
+    await supabase
+      .from('messages')
+      .update({ read: true })
+      .eq('conversation_id', conversationId)
+      .eq('receiver_id', profile.id)
+      .eq('read', false)
+
+    return messages
+  } catch (error) {
+    console.error('Error:', error)
+    throw error
+  }
+}
+
+// Send a new message
+export async function sendMessage(conversationId: string, receiverId: string, content: string): Promise<Message> {
+  try {
+    const profile = await getProfile()
+
+    // Insert the message
+    const { data: message, error: messageError } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: conversationId,
+        sender_id: profile.id,
+        receiver_id: receiverId,
+        content
+      })
+      .select()
+      .single()
+
+    if (messageError) throw messageError
+
+    // Update conversation's updated_at
+    const { error: conversationError } = await supabase
+      .from('conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', conversationId)
+
+    if (conversationError) throw conversationError
+
+    return message
+  } catch (error) {
+    console.error('Error:', error)
+    throw error
+  }
+}
+
+// Create a new conversation or get existing one
+export async function getOrCreateConversation(otherUserId: string): Promise<string> {
+  try {
+    const profile = await getProfile()
+
+    // Check if conversation already exists
+    const { data: existingConv } = await supabase
+      .from('conversations')
+      .select('id')
+      .or(`and(user_1_id.eq.${profile.id},user_2_id.eq.${otherUserId}),and(user_1_id.eq.${otherUserId},user_2_id.eq.${profile.id})`)
+      .single()
+
+    if (existingConv) return existingConv.id
+
+    // Create new conversation
+    const { data: newConv, error } = await supabase
+      .from('conversations')
+      .insert({
+        user_1_id: profile.id,
+        user_2_id: otherUserId
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return newConv.id
+  } catch (error) {
+    console.error('Error:', error)
+    throw error
+  }
 } 

@@ -1,0 +1,357 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import { 
+  getProfile, 
+  getConversations, 
+  getMessages, 
+  sendMessage, 
+  getMatchedWorkers,
+  getMatchedJobs,
+  getOrCreateConversation
+} from '@/lib/actions'
+import Loading from '@/components/Loading'
+import toast from 'react-hot-toast'
+import type { Message, Conversation, MatchedWorker, MatchedJob } from '@/lib/actions'
+
+export default function MessagesPage() {
+  const [loading, setLoading] = useState(true)
+  const [profile, setProfile] = useState<any>(null)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [sending, setSending] = useState(false)
+  const [matches, setMatches] = useState<(MatchedWorker | MatchedJob)[]>([])
+  const [showNewChat, setShowNewChat] = useState(false)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [profileData, conversationsData] = await Promise.all([
+          getProfile(),
+          getConversations()
+        ])
+        setProfile(profileData)
+        setConversations(conversationsData)
+
+        // Load matches based on user role
+        const matchesData = await (profileData.role === 'employer' 
+          ? getMatchedWorkers() 
+          : getMatchedJobs()
+        )
+        setMatches(matchesData)
+      } catch (error) {
+        console.error('[MessagesPage] Error loading data:', {
+          error: error instanceof Error ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            cause: error.cause
+          } : error
+        })
+        toast.error(error instanceof Error ? error.message : 'Could not load messages')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  useEffect(() => {
+    if (selectedConversation) {
+      loadMessages(selectedConversation.id)
+    }
+  }, [selectedConversation])
+
+  const loadMessages = async (conversationId: string) => {
+    try {
+      const messagesData = await getMessages(conversationId)
+      setMessages(messagesData)
+    } catch (error) {
+      console.error('[MessagesPage] Error loading messages:', {
+        conversationId,
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          cause: error.cause
+        } : error
+      })
+      toast.error(error instanceof Error ? error.message : 'Could not load messages')
+    }
+  }
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedConversation || !newMessage.trim() || sending) return
+
+    try {
+      setSending(true)
+      const message = await sendMessage(
+        selectedConversation.id,
+        selectedConversation.user.id,
+        newMessage.trim()
+      )
+      setMessages([...messages, message])
+      setNewMessage('')
+      
+      // Update last message in conversations list
+      setConversations(conversations.map(conv => 
+        conv.id === selectedConversation.id
+          ? {
+              ...conv,
+              last_message: message
+            }
+          : conv
+      ))
+    } catch (error) {
+      console.error('[MessagesPage] Error sending message:', {
+        conversationId: selectedConversation.id,
+        receiverId: selectedConversation.user.id,
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          cause: error.cause
+        } : error
+      })
+      toast.error(error instanceof Error ? error.message : 'Could not send message')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const startNewConversation = async (userId: string, name: string) => {
+    try {
+      const conversationId = await getOrCreateConversation(userId)
+      
+      // Check if conversation already exists in the list
+      const existingConv = conversations.find(c => c.id === conversationId)
+      if (existingConv) {
+        setSelectedConversation(existingConv)
+        setShowNewChat(false)
+        return
+      }
+
+      // Add new conversation to the list
+      const newConversation: Conversation = {
+        id: conversationId,
+        user: {
+          id: userId,
+          full_name: name,
+          avatar_url: '',
+          last_seen: new Date().toISOString()
+        },
+        unread_count: 0
+      }
+      setConversations([newConversation, ...conversations])
+      setSelectedConversation(newConversation)
+      setShowNewChat(false)
+    } catch (error) {
+      console.error('[MessagesPage] Error starting conversation:', {
+        userId,
+        name,
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          cause: error.cause
+        } : error
+      })
+      toast.error(error instanceof Error ? error.message : 'Could not start conversation')
+    }
+  }
+
+  if (loading) {
+    return <Loading />
+  }
+
+  return (
+    <main className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="grid grid-cols-12 min-h-[600px]">
+            {/* Conversations List */}
+            <div className="col-span-4 border-r border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">Messages</h2>
+                  <button
+                    onClick={() => setShowNewChat(!showNewChat)}
+                    className="px-3 py-1 bg-pink-500 text-white rounded-full hover:bg-pink-600 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  >
+                    {showNewChat ? 'Back' : 'New Chat'}
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-y-auto h-[calc(600px-4rem)]">
+                {showNewChat ? (
+                  // Show matches list
+                  <div>
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="font-medium text-gray-500">Start a new conversation</h3>
+                    </div>
+                    {matches.map((match) => {
+                      const isEmployer = 'employer' in match
+                      const userId = isEmployer ? match.employer.id : match.id
+                      const name = isEmployer ? match.employer.name : match.name
+                      const avatar = isEmployer ? match.employer.avatar_url : match.avatar_url
+                      const subtitle = isEmployer ? match.title : match.job.title
+
+                      return (
+                        <div
+                          key={userId}
+                          className="p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                          onClick={() => startNewConversation(userId, name)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Image
+                              src={avatar || '/default-avatar.png'}
+                              alt={name}
+                              width={48}
+                              height={48}
+                              className="rounded-full"
+                            />
+                            <div>
+                              <h3 className="font-medium">{name}</h3>
+                              <p className="text-sm text-gray-500">{subtitle}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  // Show conversations list
+                  conversations.map((conversation) => (
+                    <div
+                      key={conversation.id}
+                      className={`p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        selectedConversation?.id === conversation.id ? 'bg-gray-50' : ''
+                      }`}
+                      onClick={() => setSelectedConversation(conversation)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <Image
+                            src={conversation.user.avatar_url || '/default-avatar.png'}
+                            alt={conversation.user.full_name}
+                            width={48}
+                            height={48}
+                            className="rounded-full"
+                          />
+                          {conversation.unread_count > 0 && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs">{conversation.unread_count}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium truncate">{conversation.user.full_name}</h3>
+                          {conversation.last_message && (
+                            <p className="text-sm text-gray-500 truncate">
+                              {conversation.last_message.content}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Chat Area */}
+            <div className="col-span-8">
+              {selectedConversation ? (
+                <>
+                  {/* Chat Header */}
+                  <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center space-x-3">
+                      <Image
+                        src={selectedConversation.user.avatar_url || '/default-avatar.png'}
+                        alt={selectedConversation.user.full_name}
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                      />
+                      <div>
+                        <h3 className="font-medium">{selectedConversation.user.full_name}</h3>
+                        <p className="text-sm text-gray-500">
+                          {selectedConversation.user.last_seen
+                            ? `Last seen ${new Date(selectedConversation.user.last_seen).toLocaleString()}`
+                            : 'Offline'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Messages */}
+                  <div className="p-4 overflow-y-auto h-[calc(600px-8rem)]">
+                    {messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`mb-4 flex ${
+                          message.sender_id === profile.id ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                            message.sender_id === profile.id
+                              ? 'bg-pink-500 text-white'
+                              : 'bg-gray-100 text-gray-900'
+                          }`}
+                        >
+                          <p>{message.content}</p>
+                          <p className="text-xs mt-1 opacity-70">
+                            {new Date(message.created_at).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Message Input */}
+                  <div className="p-4 border-t border-gray-200">
+                    <form
+                      onSubmit={handleSendMessage}
+                      className="flex items-center space-x-2"
+                    >
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Type a message..."
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-500"
+                      />
+                      <button
+                        type="submit"
+                        disabled={sending || !newMessage.trim()}
+                        className="px-4 py-2 bg-pink-500 text-white rounded-full hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {sending ? 'Sending...' : 'Send'}
+                      </button>
+                    </form>
+                  </div>
+                </>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-3xl">💬</span>
+                    </div>
+                    <h3 className="font-medium text-gray-900 mb-1">No conversation selected</h3>
+                    <p className="text-gray-500">Choose a conversation to start messaging</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+} 

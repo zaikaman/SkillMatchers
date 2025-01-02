@@ -52,6 +52,25 @@ CREATE TYPE public.match_status AS ENUM (
 ALTER TYPE public.match_status OWNER TO postgres;
 
 --
+-- Name: handle_new_message(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.handle_new_message() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+begin
+  update public.conversations
+  set updated_at = new.created_at
+  where id = new.conversation_id;
+  return new;
+end;
+$$;
+
+
+ALTER FUNCTION public.handle_new_message() OWNER TO postgres;
+
+--
 -- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -88,6 +107,22 @@ ALTER FUNCTION public.moddatetime() OWNER TO postgres;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: conversations; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.conversations (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_1_id uuid NOT NULL,
+    user_2_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    CONSTRAINT conversations_users_check CHECK ((user_1_id < user_2_id))
+);
+
+
+ALTER TABLE public.conversations OWNER TO postgres;
 
 --
 -- Name: jobs; Type: TABLE; Schema: public; Owner: postgres
@@ -131,6 +166,23 @@ CREATE TABLE public.matches (
 ALTER TABLE public.matches OWNER TO postgres;
 
 --
+-- Name: messages; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.messages (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    conversation_id uuid NOT NULL,
+    sender_id uuid NOT NULL,
+    receiver_id uuid NOT NULL,
+    content text NOT NULL,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    read boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE public.messages OWNER TO postgres;
+
+--
 -- Name: profiles; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -157,6 +209,14 @@ CREATE TABLE public.profiles (
 ALTER TABLE public.profiles OWNER TO postgres;
 
 --
+-- Data for Name: conversations; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.conversations (id, user_1_id, user_2_id, created_at, updated_at) FROM stdin;
+\.
+
+
+--
 -- Data for Name: jobs; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -170,7 +230,15 @@ bae1896b-8653-4df9-8f6e-225941dd0f92	2970b4c8-9e6e-404b-a297-6dbda72af645	Senior
 --
 
 COPY public.matches (id, job_id, worker_id, employer_id, employer_status, worker_status, created_at, updated_at) FROM stdin;
-a4c87964-0608-4ff2-ae3a-52b47437574e	bae1896b-8653-4df9-8f6e-225941dd0f92	be40f74a-6af5-43a0-b2c5-fe48182dec06	2970b4c8-9e6e-404b-a297-6dbda72af645	accepted	accepted	2025-01-02 13:55:46.594854+00	2025-01-02 14:07:23.00476+00
+2ace4d3d-9b6c-42e7-85c5-3ca0d010b903	bae1896b-8653-4df9-8f6e-225941dd0f92	be40f74a-6af5-43a0-b2c5-fe48182dec06	2970b4c8-9e6e-404b-a297-6dbda72af645	accepted	accepted	2025-01-02 15:45:30.445074+00	2025-01-02 15:45:32.347269+00
+\.
+
+
+--
+-- Data for Name: messages; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.messages (id, conversation_id, sender_id, receiver_id, content, created_at, read) FROM stdin;
 \.
 
 
@@ -182,6 +250,14 @@ COPY public.profiles (id, role, full_name, avatar_url, bio, experience, availabi
 2970b4c8-9e6e-404b-a297-6dbda72af645	employer	Kien Vocal	https://pjkcmfosyckukzofylrk.supabase.co/storage/v1/object/public/avatars/4z38t7550lo_1735825105269.png	asdasd	11-50	immediately	{Vietnamese,English}	{JavaScript,Python}	t	2025-01-02 10:41:54.095846+00	2025-01-02 13:38:25.735+00	\N	\N	\N
 be40f74a-6af5-43a0-b2c5-fe48182dec06	worker	Thinh Dinh	https://pjkcmfosyckukzofylrk.supabase.co/storage/v1/object/public/avatars/gsh0uifmks7_1735812847738.png	asd	3-5	immediately	{Vietnamese,English}	{JavaScript,PHP,React,C++}	t	2025-01-02 10:12:35.51957+00	2025-01-02 13:46:04.245+00	https://pjkcmfosyckukzofylrk.supabase.co/storage/v1/object/public/cvs/jey01qdv3df_1735812805635.pdf	https://www.linkedin.com/authwall?trk=bf&trkInfo=AQH3CcxTZSDBVwAAAZQnQ-6Yx1Xfb37rb9na-hSPTgfM-3SI9hMXW7gH2XPTX9j5oQ50E1CYJkxxePMIzGj5wrSyBsa-9QZ_PHn-NwIuBgZJdz0SEcqjqBh5o2IAjQg1ZNq8Hzk=&original_referer=&sessionRedirect=https%3A%2F%2Fwww.linkedin.com%2Fin%2Fjohndoe	\N
 \.
+
+
+--
+-- Name: conversations conversations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.conversations
+    ADD CONSTRAINT conversations_pkey PRIMARY KEY (id);
 
 
 --
@@ -209,11 +285,61 @@ ALTER TABLE ONLY public.matches
 
 
 --
+-- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.profiles
     ADD CONSTRAINT profiles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: conversations_user_1_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX conversations_user_1_id_idx ON public.conversations USING btree (user_1_id);
+
+
+--
+-- Name: conversations_user_2_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX conversations_user_2_id_idx ON public.conversations USING btree (user_2_id);
+
+
+--
+-- Name: messages_conversation_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX messages_conversation_id_idx ON public.messages USING btree (conversation_id);
+
+
+--
+-- Name: messages_created_at_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX messages_created_at_idx ON public.messages USING btree (created_at);
+
+
+--
+-- Name: messages_receiver_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX messages_receiver_id_idx ON public.messages USING btree (receiver_id);
+
+
+--
+-- Name: messages_sender_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX messages_sender_id_idx ON public.messages USING btree (sender_id);
 
 
 --
@@ -228,6 +354,29 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.jobs FOR EACH ROW EXECU
 --
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.matches FOR EACH ROW EXECUTE FUNCTION public.moddatetime();
+
+
+--
+-- Name: messages on_new_message; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER on_new_message AFTER INSERT ON public.messages FOR EACH ROW EXECUTE FUNCTION public.handle_new_message();
+
+
+--
+-- Name: conversations conversations_user_1_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.conversations
+    ADD CONSTRAINT conversations_user_1_id_fkey FOREIGN KEY (user_1_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: conversations conversations_user_2_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.conversations
+    ADD CONSTRAINT conversations_user_2_id_fkey FOREIGN KEY (user_2_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 
 --
@@ -260,6 +409,30 @@ ALTER TABLE ONLY public.matches
 
 ALTER TABLE ONLY public.matches
     ADD CONSTRAINT matches_worker_id_fkey FOREIGN KEY (worker_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: messages messages_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id) ON DELETE CASCADE;
+
+
+--
+-- Name: messages messages_receiver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_receiver_id_fkey FOREIGN KEY (receiver_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: messages messages_sender_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 
 --
@@ -327,10 +500,40 @@ CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles FOR 
 
 
 --
+-- Name: conversations Users can create conversations; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can create conversations" ON public.conversations FOR INSERT WITH CHECK (((auth.uid() = user_1_id) OR (auth.uid() = user_2_id)));
+
+
+--
+-- Name: messages Users can insert messages in their conversations; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can insert messages in their conversations" ON public.messages FOR INSERT WITH CHECK (((auth.uid() = sender_id) AND (EXISTS ( SELECT 1
+   FROM public.conversations
+  WHERE ((conversations.id = messages.conversation_id) AND ((conversations.user_1_id = auth.uid()) OR (conversations.user_2_id = auth.uid())))))));
+
+
+--
 -- Name: profiles Users can insert their own profile; Type: POLICY; Schema: public; Owner: postgres
 --
 
 CREATE POLICY "Users can insert their own profile" ON public.profiles FOR INSERT WITH CHECK ((( SELECT auth.uid() AS uid) = id));
+
+
+--
+-- Name: messages Users can update messages they sent; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can update messages they sent" ON public.messages FOR UPDATE USING ((auth.uid() = sender_id));
+
+
+--
+-- Name: conversations Users can update their own conversations; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can update their own conversations" ON public.conversations FOR UPDATE USING (((auth.uid() = user_1_id) OR (auth.uid() = user_2_id)));
 
 
 --
@@ -341,11 +544,33 @@ CREATE POLICY "Users can update their own profile" ON public.profiles FOR UPDATE
 
 
 --
+-- Name: messages Users can view messages in their conversations; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can view messages in their conversations" ON public.messages FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM public.conversations
+  WHERE ((conversations.id = messages.conversation_id) AND ((conversations.user_1_id = auth.uid()) OR (conversations.user_2_id = auth.uid()))))));
+
+
+--
+-- Name: conversations Users can view their own conversations; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can view their own conversations" ON public.conversations FOR SELECT USING (((auth.uid() = user_1_id) OR (auth.uid() = user_2_id)));
+
+
+--
 -- Name: matches Workers can see their own matches; Type: POLICY; Schema: public; Owner: postgres
 --
 
 CREATE POLICY "Workers can see their own matches" ON public.matches FOR SELECT USING ((worker_id = auth.uid()));
 
+
+--
+-- Name: conversations; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: jobs; Type: ROW SECURITY; Schema: public; Owner: postgres
@@ -358,6 +583,12 @@ ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.matches ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: messages; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: profiles; Type: ROW SECURITY; Schema: public; Owner: postgres
@@ -373,6 +604,15 @@ GRANT USAGE ON SCHEMA public TO postgres;
 GRANT USAGE ON SCHEMA public TO anon;
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT USAGE ON SCHEMA public TO service_role;
+
+
+--
+-- Name: FUNCTION handle_new_message(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.handle_new_message() TO anon;
+GRANT ALL ON FUNCTION public.handle_new_message() TO authenticated;
+GRANT ALL ON FUNCTION public.handle_new_message() TO service_role;
 
 
 --
@@ -394,6 +634,15 @@ GRANT ALL ON FUNCTION public.moddatetime() TO service_role;
 
 
 --
+-- Name: TABLE conversations; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE public.conversations TO anon;
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE public.conversations TO authenticated;
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE public.conversations TO service_role;
+
+
+--
 -- Name: TABLE jobs; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -409,6 +658,15 @@ GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE public.jo
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE public.matches TO anon;
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE public.matches TO authenticated;
 GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE public.matches TO service_role;
+
+
+--
+-- Name: TABLE messages; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE public.messages TO anon;
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE public.messages TO authenticated;
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLE public.messages TO service_role;
 
 
 --
