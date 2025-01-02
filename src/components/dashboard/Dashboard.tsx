@@ -69,7 +69,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userType, userData }) => {
           </p>
         </Link>
 
-        <div className="grid grid-cols-2 gap-6 w-full max-w-md">
+        <div className="grid grid-cols-3 gap-6 w-full max-w-md">
           <Link 
             href="/messages"
             className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center group"
@@ -88,6 +88,16 @@ const Dashboard: React.FC<DashboardProps> = ({ userType, userData }) => {
               <span className="text-2xl">❤️</span>
             </div>
             <div className="font-semibold">Matches</div>
+          </Link>
+
+          <Link 
+            href="/interviews"
+            className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center group"
+          >
+            <div className="w-12 h-12 gradient-bg rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+              <span className="text-2xl">📅</span>
+            </div>
+            <div className="font-semibold">Interviews</div>
           </Link>
         </div>
       </div>
