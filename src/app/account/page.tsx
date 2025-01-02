@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { Profile } from '@/lib/actions'
 import { PencilIcon, CheckIcon, XMarkIcon, CameraIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
+import Link from 'next/link'
 
 export default function AccountPage() {
   const router = useRouter()
@@ -86,7 +87,18 @@ export default function AccountPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 py-12">
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="heading-lg gradient-text">Your Account</h1>
+        <Link 
+          href="/dashboard" 
+          className="btn-primary flex items-center gap-2"
+        >
+          <span>Go Dashboard</span>
+          <span className="text-xl">🏠</span>
+        </Link>
+      </div>
+
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Cover Image */}
@@ -292,6 +304,6 @@ export default function AccountPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 } 

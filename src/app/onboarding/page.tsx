@@ -9,6 +9,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { getProfile } from '@/lib/actions'
 import toast from 'react-hot-toast'
 import Loading from '@/components/Loading'
+import Link from 'next/link'
 
 type Role = 'worker' | 'employer' | null
 type Step = 1 | 2 | 3
@@ -133,6 +134,17 @@ export default function Onboarding() {
     <main className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-white">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
+          {/* Skip Onboarding Notice */}
+          <div className="text-center mb-8">
+            <Link 
+              href="/dashboard"
+              className="inline-flex items-center gap-2 text-[--primary-color] hover:text-[--secondary-color] transition-colors"
+            >
+              <span>Skip onboarding and go to dashboard if you've already done this</span>
+              <span className="text-xl">→</span>
+            </Link>
+          </div>
+
           {/* Progress Steps */}
           <div className="mb-8">
             <div className="flex items-center justify-center space-x-4">
