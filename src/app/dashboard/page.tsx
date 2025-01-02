@@ -5,15 +5,18 @@ import { useRouter } from 'next/navigation'
 import Dashboard from '@/components/dashboard/Dashboard'
 import { getProfile } from '@/lib/actions'
 import toast from 'react-hot-toast'
+import { Profile } from '@/lib/actions'
 
 export default function DashboardPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
+  const [profile, setProfile] = useState<Profile | null>(null)
 
   useEffect(() => {
-    async function checkAuth() {
+    async function loadProfile() {
       try {
-        await getProfile()
+        const profileData = await getProfile()
+        setProfile(profileData)
       } catch (error) {
         console.error('Error loading profile:', error)
         toast.error('Please login to access dashboard')
@@ -23,26 +26,29 @@ export default function DashboardPage() {
       }
     }
 
-    checkAuth()
+    loadProfile()
   }, [router])
-
-  // Normally this would come from your backend/API
-  const mockUserData = {
-    name: "Alex Johnson",
-    matches: 5,
-    unreadMessages: 3,
-    upcomingInterviews: 2
-  }
 
   if (loading) {
     return <div>Loading...</div>
   }
 
+  if (!profile) {
+    return null
+  }
+
+  const userData = {
+    name: profile.full_name,
+    matches: 5, // Tạm thời để số cứng, sau này sẽ lấy từ database
+    unreadMessages: 3,
+    upcomingInterviews: 2
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       <Dashboard 
-        userType="employer"
-        userData={mockUserData}
+        userType={profile.role}
+        userData={userData}
       />
     </main>
   )
