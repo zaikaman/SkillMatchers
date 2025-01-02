@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { 
   getProfile, 
@@ -11,6 +11,7 @@ import {
   getMatchedJobs,
   getOrCreateConversation
 } from '@/lib/actions'
+import { supabase } from '@/lib/supabase'
 import Loading from '@/components/Loading'
 import toast from 'react-hot-toast'
 import type { Message, Conversation, MatchedWorker, MatchedJob } from '@/lib/actions'
@@ -25,6 +26,19 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false)
   const [matches, setMatches] = useState<(MatchedWorker | MatchedJob)[]>([])
   const [showNewChat, setShowNewChat] = useState(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      const { scrollHeight, clientHeight } = chatContainerRef.current
+      chatContainerRef.current.scrollTop = scrollHeight - clientHeight
+    }
+  }
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
 
   useEffect(() => {
     async function loadData() {
@@ -42,6 +56,72 @@ export default function MessagesPage() {
           : getMatchedJobs()
         )
         setMatches(matchesData)
+
+        // Subscribe to new messages
+        const messagesSubscription = supabase
+          .channel('messages')
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `receiver_id=eq.${profileData.id}`
+          }, async (payload) => {
+            const newMessage = payload.new as Message
+            
+            // Update messages if in current conversation
+            if (selectedConversation?.id === newMessage.conversation_id) {
+              setMessages(prev => {
+                if (prev.some(msg => msg.id === newMessage.id)) {
+                  return prev
+                }
+                return [...prev, newMessage]
+              })
+            }
+
+            // Update conversation list
+            setConversations(prev => {
+              const updatedConvs = [...prev]
+              const convIndex = updatedConvs.findIndex(c => c.id === newMessage.conversation_id)
+              if (convIndex > -1) {
+                // Kiểm tra xem tin nhắn cuối cùng có phải là tin nhắn mới không
+                if (updatedConvs[convIndex].last_message?.id === newMessage.id) {
+                  return updatedConvs
+                }
+                updatedConvs[convIndex] = {
+                  ...updatedConvs[convIndex],
+                  last_message: newMessage,
+                  unread_count: updatedConvs[convIndex].unread_count + 1
+                }
+                // Move conversation to top
+                const [conv] = updatedConvs.splice(convIndex, 1)
+                updatedConvs.unshift(conv)
+              }
+              return updatedConvs
+            })
+          })
+          .subscribe()
+
+        // Subscribe to conversation updates
+        const conversationsSubscription = supabase
+          .channel('conversations')
+          .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'conversations',
+            filter: `user_1_id=eq.${profileData.id}`,
+          }, handleConversationUpdate)
+          .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'conversations',
+            filter: `user_2_id=eq.${profileData.id}`,
+          }, handleConversationUpdate)
+          .subscribe()
+
+        return () => {
+          messagesSubscription.unsubscribe()
+          conversationsSubscription.unsubscribe()
+        }
       } catch (error) {
         console.error('[MessagesPage] Error loading data:', {
           error: error instanceof Error ? {
@@ -60,11 +140,48 @@ export default function MessagesPage() {
     loadData()
   }, [])
 
+  const handleConversationUpdate = async (payload: any) => {
+    const updatedConv = payload.new
+    // Reload conversations to get latest data
+    const conversationsData = await getConversations()
+    setConversations(conversationsData)
+  }
+
   useEffect(() => {
+    let messageSubscription: any = null
+
     if (selectedConversation) {
       loadMessages(selectedConversation.id)
+
+      // Subscribe to messages for selected conversation
+      messageSubscription = supabase
+        .channel(`messages:${selectedConversation.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`
+        }, (payload) => {
+          const newMessage = payload.new as Message
+          // Chỉ xử lý tin nhắn từ người khác gửi
+          if (newMessage.sender_id !== profile?.id) {
+            setMessages(prev => {
+              if (prev.some(msg => msg.id === newMessage.id)) {
+                return prev
+              }
+              return [...prev, newMessage]
+            })
+          }
+        })
+        .subscribe()
     }
-  }, [selectedConversation])
+
+    return () => {
+      if (messageSubscription) {
+        messageSubscription.unsubscribe()
+      }
+    }
+  }, [selectedConversation, profile?.id])
 
   const loadMessages = async (conversationId: string) => {
     try {
@@ -274,78 +391,69 @@ export default function MessagesPage() {
                       <Image
                         src={selectedConversation.user.avatar_url || '/default-avatar.png'}
                         alt={selectedConversation.user.full_name}
-                        width={40}
-                        height={40}
+                        width={48}
+                        height={48}
                         className="rounded-full"
                       />
                       <div>
                         <h3 className="font-medium">{selectedConversation.user.full_name}</h3>
                         <p className="text-sm text-gray-500">
-                          {selectedConversation.user.last_seen
-                            ? `Last seen ${new Date(selectedConversation.user.last_seen).toLocaleString()}`
-                            : 'Offline'}
+                          Last seen {new Date(selectedConversation.user.last_seen).toLocaleString()}
                         </p>
                       </div>
                     </div>
                   </div>
 
                   {/* Messages */}
-                  <div className="p-4 overflow-y-auto h-[calc(600px-8rem)]">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`mb-4 flex ${
-                          message.sender_id === profile.id ? 'justify-end' : 'justify-start'
-                        }`}
-                      >
+                  <div ref={chatContainerRef} className="p-4 h-[calc(600px-8rem)] overflow-y-auto">
+                    <div className="space-y-4">
+                      {messages.map((message) => (
                         <div
-                          className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                            message.sender_id === profile.id
-                              ? 'bg-pink-500 text-white'
-                              : 'bg-gray-100 text-gray-900'
+                          key={message.id}
+                          className={`flex ${
+                            message.sender_id === profile.id ? 'justify-end' : 'justify-start'
                           }`}
                         >
-                          <p>{message.content}</p>
-                          <p className="text-xs mt-1 opacity-70">
-                            {new Date(message.created_at).toLocaleTimeString()}
-                          </p>
+                          <div
+                            className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                              message.sender_id === profile.id
+                                ? 'bg-pink-500 text-white'
+                                : 'bg-gray-100'
+                            }`}
+                          >
+                            <p>{message.content}</p>
+                            <p className="text-xs mt-1 opacity-70">
+                              {new Date(message.created_at).toLocaleTimeString()}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
 
                   {/* Message Input */}
                   <div className="p-4 border-t border-gray-200">
-                    <form
-                      onSubmit={handleSendMessage}
-                      className="flex items-center space-x-2"
-                    >
+                    <form onSubmit={handleSendMessage} className="flex space-x-4">
                       <input
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Type a message..."
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        className="flex-1 rounded-full border border-gray-300 px-4 py-2 focus:outline-none focus:border-pink-500"
                       />
                       <button
                         type="submit"
                         disabled={sending || !newMessage.trim()}
-                        className="px-4 py-2 bg-pink-500 text-white rounded-full hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-pink-500 text-white rounded-full px-6 py-2 hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {sending ? 'Sending...' : 'Send'}
+                        Send
                       </button>
                     </form>
                   </div>
                 </>
               ) : (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-16 h-16 gradient-bg rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-3xl">💬</span>
-                    </div>
-                    <h3 className="font-medium text-gray-900 mb-1">No conversation selected</h3>
-                    <p className="text-gray-500">Choose a conversation to start messaging</p>
-                  </div>
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  Select a conversation or start a new one
                 </div>
               )}
             </div>
