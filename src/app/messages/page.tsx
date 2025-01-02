@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { 
@@ -17,7 +17,7 @@ import Loading from '@/components/Loading'
 import toast from 'react-hot-toast'
 import type { Message, Conversation, MatchedWorker, MatchedJob } from '@/lib/actions'
 
-export default function MessagesPage() {
+function MessagesContent() {
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
@@ -477,5 +477,13 @@ export default function MessagesPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <MessagesContent />
+    </Suspense>
   )
 } 
