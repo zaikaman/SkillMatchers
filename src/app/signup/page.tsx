@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signUp, signInWithGoogle, signInWithLinkedIn } from '@/lib/actions'
+import { signUp, signInWithGoogle } from '@/lib/actions'
 
 function validatePassword(password: string) {
   const minLength = password.length >= 6;
@@ -66,18 +66,6 @@ export default function SignUp() {
         setError(error.message)
       } else {
         setError('An error occurred during Google sign in')
-      }
-    }
-  }
-
-  const handleLinkedInSignIn = async () => {
-    try {
-      await signInWithLinkedIn()
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(error.message)
-      } else {
-        setError('An error occurred during LinkedIn sign in')
       }
     }
   }
@@ -157,20 +145,13 @@ export default function SignUp() {
                   </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-2 gap-4">
+                <div className="mt-6 grid grid-cols-1 gap-4">
                   <button
                     onClick={handleGoogleSignIn}
                     className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
                   >
                     <Image src="/google.svg" alt="Google" width={20} height={20} />
                     <span className="ml-2">Google</span>
-                  </button>
-                  <button
-                    onClick={handleLinkedInSignIn}
-                    className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                  >
-                    <Image src="/linkedin.svg" alt="LinkedIn" width={20} height={20} />
-                    <span className="ml-2">LinkedIn</span>
                   </button>
                 </div>
               </div>

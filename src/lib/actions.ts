@@ -64,18 +64,6 @@ export const signInWithGoogle = async () => {
   }
 }
 
-export async function signInWithLinkedIn() {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'linkedin',
-    options: {
-      redirectTo: authCallbackUrl,
-    },
-  })
-  
-  if (error) throw error
-  return data
-}
-
 export async function getProfile() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')

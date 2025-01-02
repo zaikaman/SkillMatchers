@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signIn, signInWithGoogle, signInWithLinkedIn, getProfile } from '@/lib/actions'
+import { signIn, signInWithGoogle, getProfile } from '@/lib/actions'
 import toast from 'react-hot-toast'
 
 export default function Login() {
@@ -65,29 +65,6 @@ export default function Login() {
         setError(error.message)
       } else {
         setError('An error occurred during Google sign in. Please try again.')
-      }
-    }
-  }
-
-  const handleLinkedInSignIn = async () => {
-    try {
-      await signInWithLinkedIn()
-      // Get user profile after successful login
-      const profile = await getProfile()
-      
-      toast.success('Welcome back! You have successfully signed in with LinkedIn')
-      
-      // Redirect based on profile status
-      if (!profile?.has_completed_onboarding) {
-        router.push('/onboarding')
-      } else {
-        router.push('/dashboard')
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(error.message)
-      } else {
-        setError('An error occurred during LinkedIn sign in. Please try again.')
       }
     }
   }
@@ -170,20 +147,13 @@ export default function Login() {
                   </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-2 gap-4">
+                <div className="mt-6 grid grid-cols-1 gap-4">
                   <button
                     onClick={handleGoogleSignIn}
                     className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
                   >
                     <Image src="/google.svg" alt="Google" width={20} height={20} />
                     <span className="ml-2">Google</span>
-                  </button>
-                  <button
-                    onClick={handleLinkedInSignIn}
-                    className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all"
-                  >
-                    <Image src="/linkedin.svg" alt="LinkedIn" width={20} height={20} />
-                    <span className="ml-2">LinkedIn</span>
                   </button>
                 </div>
               </div>
