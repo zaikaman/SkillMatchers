@@ -12,35 +12,13 @@ export async function GET(request: Request) {
     
     try {
       await supabase.auth.exchangeCodeForSession(code)
-      
-      // Check if user has confirmed their email
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user?.email_confirmed_at) {
-        // Check if user has completed onboarding
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, has_completed_onboarding')
-          .eq('id', user.id)
-          .single()
-
-        if (!profile?.has_completed_onboarding) {
-          // If onboarding is not completed, redirect to onboarding page
-          return NextResponse.redirect(new URL('/onboarding', baseUrl))
-        }
-        
-        // If onboarding is completed, redirect to dashboard
-        return NextResponse.redirect(new URL('/dashboard', baseUrl))
-      } else {
-        // If email is not confirmed, redirect to verify page
-        return NextResponse.redirect(new URL('/auth/verify', baseUrl))
-      }
+      return NextResponse.redirect(new URL('/onboarding', baseUrl))
     } catch {
       // If there's an error, redirect to login page
-      return NextResponse.redirect(new URL('/login', baseUrl))
+      return NextResponse.redirect(new URL('/onboarding', baseUrl))
     }
   }
 
   // If no code is present, redirect to login page
-  return NextResponse.redirect(new URL('/login', baseUrl))
+  return NextResponse.redirect(new URL('/onboarding', baseUrl))
 } 

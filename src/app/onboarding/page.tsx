@@ -1,16 +1,18 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { updateProfile, uploadAvatar } from '@/lib/actions'
 import { uploadToCloudinary } from '@/lib/cloudinary'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 type Role = 'worker' | 'employer' | null
 type Step = 1 | 2 | 3
 
 export default function Onboarding() {
   const router = useRouter()
+  const supabase = createClientComponentClient()
   const [step, setStep] = useState<Step>(1)
   const [role, setRole] = useState<Role>(null)
   const [skills, setSkills] = useState<string[]>([])
@@ -18,6 +20,40 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string>()
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const checkProfile = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (!session) {
+          setTimeout(checkProfile, 1000)
+          return
+        }
+
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+
+        if (error) {
+          console.error('Error fetching profile:', error)
+          return
+        }
+
+        if (profile?.has_completed_onboarding) {
+          router.push('/dashboard')
+        }
+      } catch (error) {
+        console.error('Error in checkProfile:', error)
+      }
+    }
+
+    checkProfile()
+  }, [router, supabase])
 
   const handleRoleSelect = (selectedRole: Role) => {
     setRole(selectedRole)
