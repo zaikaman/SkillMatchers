@@ -121,7 +121,10 @@ function InterviewContent() {
       if (!agoraClient || !localTracks) return
 
       if (!isScreenSharing) {
-        const screenTrack = await AgoraRTC.createScreenVideoTrack()
+        const screenTrack = await AgoraRTC.createScreenVideoTrack({
+          encoderConfig: '1080p_1',
+          optimizationMode: 'detail'
+        })
         await agoraClient.unpublish(localTracks.videoTrack)
         await agoraClient.publish(screenTrack)
         if (localVideoRef.current) {
