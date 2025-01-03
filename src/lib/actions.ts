@@ -325,7 +325,7 @@ export async function getPotentialMatches(jobId: string) {
     // Get existing matches
     const { data: existingMatches, error: matchesError } = await supabase
       .from('matches')
-      .select('worker_id')
+      .select('worker_id, employer_status, worker_status')
       .eq('job_id', jobId)
 
     if (matchesError) {
@@ -336,7 +336,12 @@ export async function getPotentialMatches(jobId: string) {
       throw new Error(`Error getting matches list: ${matchesError.message}`)
     }
 
-    const excludedWorkerIds = existingMatches?.map(m => m.worker_id) || []
+    // Only exclude workers that have been accepted by both parties or rejected by either party
+    const excludedWorkerIds = existingMatches?.filter(match => 
+      (match.employer_status === 'accepted' && match.worker_status === 'accepted') ||
+      match.employer_status === 'rejected' ||
+      match.worker_status === 'rejected'
+    ).map(m => m.worker_id) || []
     console.log('Excluded worker IDs:', excludedWorkerIds)
 
     // Get all workers first
@@ -624,15 +629,8 @@ export async function getPotentialJobMatches() {
       console.error('[getPotentialJobMatches] Profile not found:', { userId: user.id })
       throw new Error('Profile not found')
     }
-    if (profile.role !== 'worker') {
-      console.error('[getPotentialJobMatches] Invalid role:', JSON.stringify({ 
-        userId: user.id,
-        role: profile.role 
-      }, null, 2))
-      throw new Error('Only workers can use this feature')
-    }
 
-    console.error('[getPotentialJobMatches] Worker profile:', JSON.stringify({
+    console.error('[getPotentialJobMatches] Profile:', JSON.stringify({
       id: profile.id,
       skills: profile.skills || [],
       role: profile.role,
