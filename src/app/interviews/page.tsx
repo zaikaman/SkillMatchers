@@ -126,9 +126,10 @@ function InterviewContent() {
           optimizationMode: 'detail'
         })
         await agoraClient.unpublish(localTracks.videoTrack)
-        await agoraClient.publish(screenTrack)
+        await agoraClient.publish(Array.isArray(screenTrack) ? screenTrack[0] : screenTrack)
         if (localVideoRef.current) {
-          screenTrack.play(localVideoRef.current)
+          const videoTrack = Array.isArray(screenTrack) ? screenTrack[0] : screenTrack
+          videoTrack.play(localVideoRef.current)
         }
         setIsScreenSharing(true)
       } else {
