@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -30,6 +30,12 @@ function InterviewContent() {
   const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([])
   const localVideoRef = useRef<HTMLDivElement>(null)
   const remoteVideoRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+
+  const setRemoteVideoRef = useCallback((uid: string | number) => (element: HTMLDivElement | null) => {
+    if (element) {
+      remoteVideoRefs.current[uid] = element
+    }
+  }, [])
 
   useEffect(() => {
     const initializeAgora = async () => {
@@ -183,7 +189,7 @@ function InterviewContent() {
               <div
                 key={user.uid}
                 className="bg-black rounded-lg overflow-hidden relative aspect-video"
-                ref={el => remoteVideoRefs.current[user.uid] = el}
+                ref={setRemoteVideoRef(user.uid)}
               />
             ))}
             {/* Local video preview */}
