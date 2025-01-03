@@ -11,7 +11,6 @@ interface DashboardProps {
     name: string
     matches: number
     unreadMessages: number
-    upcomingInterviews: number
   }
 }
 
@@ -48,7 +47,7 @@ export default function Dashboard({ userType, userData }: DashboardProps) {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-2 gap-6 mb-12">
         <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center">
           <div className="w-12 h-12 gradient-bg rounded-full flex items-center justify-center mx-auto mb-3">
             <span className="text-2xl">👥</span>
@@ -63,14 +62,6 @@ export default function Dashboard({ userType, userData }: DashboardProps) {
           </div>
           <div className="text-2xl font-bold gradient-text mb-1">{userData.unreadMessages}</div>
           <div className="text-gray-600 text-sm">Messages</div>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center">
-          <div className="w-12 h-12 gradient-bg rounded-full flex items-center justify-center mx-auto mb-3">
-            <span className="text-2xl">📅</span>
-          </div>
-          <div className="text-2xl font-bold gradient-text mb-1">{userData.upcomingInterviews}</div>
-          <div className="text-gray-600 text-sm">Interviews</div>
         </div>
       </div>
 
@@ -110,7 +101,7 @@ export default function Dashboard({ userType, userData }: DashboardProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-6 w-full max-w-md">
+        <div className="grid grid-cols-2 gap-6 w-full max-w-md">
           <Link 
             href="/messages"
             className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center group"
@@ -129,16 +120,6 @@ export default function Dashboard({ userType, userData }: DashboardProps) {
               <span className="text-2xl">❤️</span>
             </div>
             <div className="font-semibold">Matches</div>
-          </Link>
-
-          <Link 
-            href="/interviews"
-            className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center group"
-          >
-            <div className="w-12 h-12 gradient-bg rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-              <span className="text-2xl">📅</span>
-            </div>
-            <div className="font-semibold">Interviews</div>
           </Link>
         </div>
       </div>

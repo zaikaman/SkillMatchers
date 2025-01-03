@@ -1242,4 +1242,38 @@ export async function getOrCreateConversation(otherUserId: string): Promise<stri
     console.error('Error:', error)
     throw error
   }
+}
+
+export async function getUnreadMessagesCount() {
+  try {
+    const profile = await getProfile()
+    if (!profile) throw new Error('Not authenticated')
+
+    // Count unread messages from messages table
+    const { count, error } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('receiver_id', profile.id)
+      .eq('read', false)
+
+    if (error) {
+      console.error('[getUnreadMessagesCount] Database error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      })
+      throw error
+    }
+
+    return count || 0
+  } catch (error) {
+    console.error('[getUnreadMessagesCount] Error:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error: JSON.stringify(error, null, 2)
+    })
+    return 0
+  }
 } 
