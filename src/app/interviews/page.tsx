@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useProfile } from '@/components/providers/profile'
 import Loading from '@/components/Loading'
 import toast from 'react-hot-toast'
+import AgoraRTC from 'agora-rtc-sdk-ng'
 import {
   createAgoraClient,
   createLocalTracks,
