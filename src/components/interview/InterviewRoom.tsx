@@ -182,21 +182,32 @@ export default function InterviewRoom() {
       {loading ? (
         <Loading />
       ) : (
-        <div className="flex-1 flex flex-col md:flex-row p-4 space-y-4 md:space-y-0 md:space-x-4">
+        <div className="flex-1 flex flex-col p-4">
           {/* Main video area */}
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {remoteUsers.map(user => (
-              <div
-                key={user.uid}
-                className="bg-black rounded-lg overflow-hidden relative aspect-video"
-                ref={setRemoteVideoRef(user.uid)}
-              />
-            ))}
             {/* Local video preview */}
-            <div
-              ref={localVideoRef}
-              className="bg-black rounded-lg overflow-hidden relative aspect-video"
-            />
+            <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+              <div
+                ref={localVideoRef}
+                className="absolute inset-0"
+              />
+              <div className="absolute bottom-4 left-4 text-white text-sm font-medium bg-black bg-opacity-50 px-2 py-1 rounded">
+                You {isScreenSharing && '(Screen Sharing)'}
+              </div>
+            </div>
+
+            {/* Remote videos */}
+            {remoteUsers.map(user => (
+              <div key={user.uid} className="relative bg-black rounded-lg overflow-hidden aspect-video">
+                <div
+                  ref={setRemoteVideoRef(user.uid)}
+                  className="absolute inset-0"
+                />
+                <div className="absolute bottom-4 left-4 text-white text-sm font-medium bg-black bg-opacity-50 px-2 py-1 rounded">
+                  Remote User
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
