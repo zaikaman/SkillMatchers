@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Toaster } from 'react-hot-toast';
 import { ProfileProvider } from '@/components/providers/profile';
+import { DatabasePingMonitor } from '@/components/DatabasePingMonitor';
 
 const outfit = Outfit({ 
   subsets: ["latin"],
@@ -31,6 +32,10 @@ export default function RootLayout({
       <body>
         <ProfileProvider>
           <Toaster position="top-center" />
+          {/* Database ping monitor - compact mode */}
+          <div className="fixed top-4 right-4 z-50">
+            <DatabasePingMonitor />
+          </div>
           <Header />
           {children}
           <Footer />
